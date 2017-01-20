@@ -231,6 +231,8 @@ void setup()
   */
   myLidarLite.configure(0); // Change this number to try out alternate configurations
 
+  Initialize();
+
   FLUSHMOTORBUFFER();
 
 }
@@ -597,16 +599,57 @@ void DoSerialCommands()
 
 /////////////////////////////////////////////////////////////////
 ///////////////// CONSTANT RUN TIME OBSTACLE AVOIDANCE //////////
-long maxStep = 200;
+long maxStep = 220;
 boolean GoingUp = 0;
-
+long minStep = 20;
 
 void StepAndRead()
 {
-  if(curStep == maxStep)
+  if(curStep >= maxStep)
   {
-
+    GoingUp = false;
   }
+  else if(curStep <= minStep)
+  {
+    GoingUp = true;
+  }
+
+  if(GoingUp)
+  {
+    stepForward();
+  }
+  else
+  {
+    stepBackward();
+  }
+
+  int distance = myLidarLite.distance();
+  double Angle = GetAngleFromStep(curStep);
+
+  LidarRead curRead;
+  curRead.angle = Angle;
+  curRead.reading = distance;
+
+  // Ignore if Distance == 1
+
+  if(curRead.reading >= 2)
+  {
+    Serial.print("Angle: ");
+    Serial.print(curRead.angle);
+    Serial.print(" Reading: ");
+    Serial.println(curRead.reading);
+
+    if(distance < 100)
+    {
+      StopMotor();
+    }
+
+    while(distance < 100 || distance <= 2)
+    {
+      distance = myLidarLite.distance();
+    }
+  }
+
 }
 
 
@@ -822,61 +865,64 @@ void loop()
 {
   DoSerialCommands();
 
-  //DoSquares();
+  DoSquares();
 
   // if(curWayPoint == 0)
   // {
   //   DoCorrectionAngle(160, 200, true);
   // }
 
-  if(curWayPoint == 1)
-  {
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorToAngle(78);
-      DataSent = true;
-      sweeping = false;
-    }
-  }
-  if(curWayPoint == 2)
-  {
-    AlignToWallOnLeft();
-  }
-  if(curWayPoint == 3)
-  {
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorForward(4);
-      DataSent = true;
-      sweeping = false;
-    }
-  }
-  if(curWayPoint == 4)
-  {
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorToAngle(258);
-      DataSent = true;
-      sweeping = false;
-    }
-  }
-  if(curWayPoint == 5)
-  {
-    AlignToWallOnRight();
-  }
-  if(curWayPoint == 6)
-  {
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorForward(4);
-      DataSent = true;
-      sweeping = false;
-    }
-  }
+  // if(curWayPoint == 1)
+  // {
+  //   if(!DataSent && !ManualMode)
+  //   {
+  //     FLUSHMOTORBUFFER();
+  //     MoveMotorToAngle(78);
+  //     DataSent = true;
+  //     sweeping = false;
+  //   }
+  // }
+  // if(curWayPoint == 2)
+  // {
+  //   AlignToWallOnLeft();
+  // }
+  // if(curWayPoint == 3)
+  // {
+  //   if(!DataSent && !ManualMode)
+  //   {
+  //     FLUSHMOTORBUFFER();
+  //     MoveMotorForward(4);
+  //     DataSent = true;
+  //     sweeping = false;
+  //   }
+  // }
+  // if(curWayPoint == 4)
+  // {
+  //   if(!DataSent && !ManualMode)
+  //   {
+  //     FLUSHMOTORBUFFER();
+  //     MoveMotorToAngle(258);
+  //     DataSent = true;
+  //     sweeping = false;
+  //   }
+  // }
+  // if(curWayPoint == 5)
+  // {
+  //   AlignToWallOnRight();
+  // }
+  // if(curWayPoint == 6)
+  // {
+  //   if(!DataSent && !ManualMode)
+  //   {
+  //     FLUSHMOTORBUFFER();
+  //     MoveMotorForward(4);
+  //     DataSent = true;
+  //     sweeping = false;
+  //   }
+  // }
+
+
+
   // else if(curWayPoint == 3)
   // {
   //   if(!DataSent && !ManualMode)
@@ -1019,6 +1065,11 @@ void loop()
   //   sweepFrom = 0;
   //   Serial.println("SWEEP ERROR");
   // }
+
+  if(!sweeping)
+  {
+    StepAndRead();
+  }
 
   if(CheckForMotionComplete() && !sweeping && !waitingForButton)
   {
