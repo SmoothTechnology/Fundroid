@@ -748,7 +748,7 @@ void DoSquares()
   }
   else if(curWayPoint == 4)
   {
-    if(!DataSent)
+    if(!DataSent && !ManualMode)
     {
       FLUSHMOTORBUFFER();
       MoveMotorForward(3);
@@ -759,7 +759,7 @@ void DoSquares()
   else if(curWayPoint == 5)
   {
     //DoCorrectionAngle(0, 80, true);
-    if(!DataSent)
+    if(!DataSent && !ManualMode)
     {
       FLUSHMOTORBUFFER();
       MoveMotorToAngle(258);
@@ -769,7 +769,7 @@ void DoSquares()
   }
   else if(curWayPoint == 6)
   {
-    if(!DataSent)
+    if(!DataSent && !ManualMode)
     {
       FLUSHMOTORBUFFER();
       MoveMotorForward(3);
@@ -779,7 +779,7 @@ void DoSquares()
   }
   else if(curWayPoint == 7)
   {
-    if(!DataSent)
+    if(!DataSent && !ManualMode)
     {
       FLUSHMOTORBUFFER();
       MoveMotorToAngle(348);
@@ -789,7 +789,7 @@ void DoSquares()
   }
   else if(curWayPoint == 8)
   {
-    if(!DataSent)
+    if(!DataSent && !ManualMode)
     {
       FLUSHMOTORBUFFER();
       MoveMotorForward(3);
