@@ -765,6 +765,71 @@ void AlignToWallOnLeft()
     }while(DoingAlgorithm);
 }
 
+void StepToSpecificPosition(int stepperAngle)
+{
+  while(curStep < stepperAngle)
+  {
+    stepForward();
+  }
+}
+
+void DriveToCornerRight(int distance)
+{
+  Initialize();
+  DoingAlgorithm = true;
+  AlgorithmComplete = false;
+  int stepperAngleToRight = 20;
+  int allowableSlope = 10;
+  int lastDistance = 0;
+
+  StepToSpecificPosition(stepperAngleToRight);
+
+  lastDistance = myLidarLite.distance();
+
+  FLUSHMOTORBUFFER();
+  MoveMotorForward(distance);
+
+  do
+  {
+    int curDistance = myLidarLite.distance();
+
+    if(abs(curDistance - lastDistance) > allowableSlope)
+    {
+      StopMotor();
+    }
+
+    lastDistance = curDistance;
+  }while(CheckForMotionComplete());
+}
+
+void DriveToCornerLeft(int distance)
+{
+  Initialize();
+  DoingAlgorithm = true;
+  AlgorithmComplete = false;
+  int stepperAngleToLeft = 220;
+  int allowableSlope = 10;
+  int lastDistance = 0;
+
+  StepToSpecificPosition(stepperAngleToLeft);
+  lastDistance = myLidarLite.distance();
+
+  FLUSHMOTORBUFFER();
+  MoveMotorForward(distance);
+
+  do
+  {
+    int curDistance = myLidarLite.distance();
+
+    if(abs(curDistance - lastDistance) > allowableSlope)
+    {
+      StopMotor();
+    }
+
+    lastDistance = curDistance;
+  }while(CheckForMotionComplete());
+}
+
 /////////////////////// END ALGORITHMS //////////////////////////////
 ////////////////////////////////////////////////////////////////////
 void DoSquares()
