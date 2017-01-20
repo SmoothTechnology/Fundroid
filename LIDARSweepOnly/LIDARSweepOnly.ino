@@ -231,6 +231,8 @@ void setup()
   */
   myLidarLite.configure(0); // Change this number to try out alternate configurations
 
+  Initialize();
+
   FLUSHMOTORBUFFER();
 
 }
@@ -294,6 +296,7 @@ double acceptableRSquared = 0.90;
 
 double FindBestFitLineInDataSet(REAL x[], REAL y[], int n, int WallShouldBeOnRight)
 {
+  SweepError = false;
   int acceptableNumberOfReads = 3;
   double outlierThreshold = 30.0;
   int maxCycles = 5;
@@ -451,7 +454,7 @@ void Sweep(double fromAngle, double toAngle)
       curRead.angle = Angle;
       curRead.reading = distance;
       dataPoints[curDataPoints] = curRead;
-      curDataPoints++;
+      curDataPoints++; 
     }
     else if(GetAngleFromStep(curStep) > toAngle)
     {
@@ -470,6 +473,8 @@ boolean DataSent = false;
 boolean sweeping = false;
 boolean waitingForButton = false;
 boolean buttonPressed = false;
+boolean DoingAlgorithm = false;
+boolean AlgorithmComplete = false;
 
 double CorrectRightAngle = 8.0;
 double CorrectLeftAngle = 9.0;
@@ -481,6 +486,7 @@ void DoCorrectionAngle(int findLineFrom, int findLineTo, boolean wallOnRight)
       sweepTo = findLineTo;
       DataSent = true;
       sweeping = true;
+      SweepDone = false;
     }
 
     Sweep(sweepFrom, sweepTo);
@@ -509,6 +515,8 @@ void OnCompleteWayPoint()
   sweeping = false;
   waitingForButton = false;
   buttonPressed = false;
+  DoingAlgorithm = false;
+  AlgorithmComplete = false;
 
   Serial.print("Moving to Waypoint ");
   Serial.println(curWayPoint);
@@ -589,34 +597,433 @@ void DoSerialCommands()
   }
 }
 
-////////////////////////////////////////////////////////////////////
-////////////////////// ALGORITHMS //////////////////////////////////
-boolean AlgorithmComplete = false;
-double expectedWallOnRightAngle = -75.7;
-void AlignToWallOnRight()
+/////////////////////////////////////////////////////////////////
+///////////////// CONSTANT RUN TIME OBSTACLE AVOIDANCE //////////
+long maxStep = 220;
+boolean GoingUp = 0;
+long minStep = 20;
+
+void StepAndRead()
 {
-      sweepFrom = 0;
-      sweepTo = 80;
-      ManualMode = true;
-      DoCorrectionAngle(sweepFrom, sweepTo, true);
+  if(curStep >= maxStep)
+  {
+    GoingUp = false;
+  }
+  else if(curStep <= minStep)
+  {
+    GoingUp = true;
+  }
+
+  if(GoingUp)
+  {
+    stepForward();
+  }
+  else
+  {
+    stepBackward();
+  }
+
+  int distance = myLidarLite.distance();
+  double Angle = GetAngleFromStep(curStep);
+
+  LidarRead curRead;
+  curRead.angle = Angle;
+  curRead.reading = distance;
+
+  // Ignore if Distance == 1
+
+  if(curRead.reading >= 2)
+  {
+    Serial.print("Angle: ");
+    Serial.print(curRead.angle);
+    Serial.print(" Reading: ");
+    Serial.println(curRead.reading);
+
+    if(distance < 100)
+    {
+      StopMotor();
+    }
+
+    while(distance < 100 || distance <= 2)
+    {
+      distance = myLidarLite.distance();
+    }
+  }
+
 }
 
-double expectedWallOnLeftAngle = -75.7;
+
+////////////////// END RUN TIME OBSTACLE AVOIDANCE //////////////
+////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
+////////////////////// ALGORITHMS //////////////////////////////////
+
+double acceptableWallAngleDiff = 1.0;
+double expectedWallOnRightAngle = -63;
 void AlignToWallOnRight()
 {
+      DoingAlgorithm = true;
+      AlgorithmComplete = false;
+      
+    do
+    {
       sweepFrom = 0;
       sweepTo = 80;
-      ManualMode = true;
-      DoCorrectionAngle(sweepFrom, sweepTo, true);
+
+      do
+      {
+        DoCorrectionAngle(sweepFrom, sweepTo, true);
+      }while(!SweepDone && !SweepError);
+
+      if(SweepError)
+      {
+        // Need Help
+      }
+
+      double angleDiff = Angle - expectedWallOnRightAngle;
+
+      Serial.println(angleDiff);
+
+      if(expectedWallOnRightAngle - acceptableWallAngleDiff < Angle && expectedWallOnRightAngle + acceptableWallAngleDiff > Angle)
+      {
+        DoingAlgorithm = false;
+        AlgorithmComplete = true;
+        break;
+      }
+      else
+      {
+        boolean dataSent = false;
+        int prevSysAngle = curSystemAngle;
+        FLUSHMOTORBUFFER();
+        do
+        {
+          if(!dataSent)
+            {
+              dataSent = true;
+              MoveMotorToAngle(prevSysAngle - angleDiff);
+            }
+        }while(!CheckForMotionComplete());
+      }
+
+    }while(DoingAlgorithm);
+}
+
+double expectedWallOnLeftAngle = -63;
+void AlignToWallOnLeft()
+{
+      DoingAlgorithm = true;
+      AlgorithmComplete = false;
+
+      do
+      {
+        sweepFrom = 140;
+        sweepTo = 200;
+
+        do
+        {
+          DoCorrectionAngle(sweepFrom, sweepTo, true);
+          Serial.print(SweepDone);
+          Serial.print(" ");
+          Serial.print(SweepError);
+          Serial.print(" ");
+          Serial.println(sweeping);
+        }while(!SweepDone && !SweepError && sweeping);
+
+        if(SweepError)
+        {
+          // Need Help
+        }
+
+        double angleDiff = Angle - expectedWallOnLeftAngle;
+
+        Serial.println(angleDiff);
+
+        if(expectedWallOnLeftAngle - acceptableWallAngleDiff < Angle && expectedWallOnLeftAngle + acceptableWallAngleDiff > Angle)
+        {
+          DoingAlgorithm = false;
+          AlgorithmComplete = true;
+          Serial.println("Found Acceptable Wall angle!");
+          break;
+        }
+        else
+        {
+          int prevSysAngle = curSystemAngle;
+          boolean dataSent = false;
+          FLUSHMOTORBUFFER();
+          do
+          {
+            if(!dataSent)
+            {
+              dataSent = true;
+              MoveMotorToAngle(prevSysAngle - angleDiff);
+            }
+            
+          }while(!CheckForMotionComplete());
+        }
+
+    }while(DoingAlgorithm);
+}
+
+void StepToSpecificPosition(int stepperAngle)
+{
+  while(curStep < stepperAngle)
+  {
+    stepForward();
+  }
+}
+
+void DriveToCornerRight(int distance)
+{
+  Initialize();
+  DoingAlgorithm = true;
+  AlgorithmComplete = false;
+  int stepperAngleToRight = 20;
+  int allowableSlope = 10;
+  int lastDistance = 0;
+  boolean wallFound = false;
+
+  Serial.println("Drive to Corner Right");
+
+  StepToSpecificPosition(stepperAngleToRight);
+  lastDistance = myLidarLite.distance();
+
+  FLUSHMOTORBUFFER();
+  MoveMotorForward(distance);
+
+  do
+  {
+    int curDistance = myLidarLite.distance();
+
+    while(curDistance <= 2)
+    {
+      curDistance = myLidarLite.distance();
+    }
+
+    if(abs(curDistance - lastDistance) > allowableSlope)
+    {
+      StopMotor();
+    }
+
+    lastDistance = curDistance;
+  }while(!wallFound);
+
+  AlgorithmComplete = true;
+}
+
+void DriveToCornerLeft(int distance)
+{
+  Initialize();
+  DoingAlgorithm = true;
+  AlgorithmComplete = false;
+  int stepperAngleToLeft = 220;
+  int allowableSlope = 10;
+  int lastDistance = 0;
+  boolean wallFound = false;
+
+  Serial.println("Drive to Corner Left");
+
+  StepToSpecificPosition(stepperAngleToLeft);
+  lastDistance = myLidarLite.distance();
+
+  FLUSHMOTORBUFFER();
+  MoveMotorForward(distance);
+
+  do
+  {
+    int curDistance = myLidarLite.distance();
+    Serial.print("Distance: ");
+    Serial.println(curDistance);
+
+    while(curDistance <= 2)
+    {
+      curDistance = myLidarLite.distance();
+    }
+
+    if(abs(curDistance - lastDistance) > allowableSlope)
+    {
+      StopMotor();
+      wallFound = true;
+    }
+
+    lastDistance = curDistance;
+  }while(!wallFound);
+
+  AlgorithmComplete = true;
 }
 
 /////////////////////// END ALGORITHMS //////////////////////////////
 ////////////////////////////////////////////////////////////////////
+void DoSquares()
+{
+
+  if(curWayPoint == 1)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorToAngle(78);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+  else if(curWayPoint == 2)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorForward(3);
+      DataSent = true;
+      sweeping = false;
+      FLUSHMOTORBUFFER();
+    }
+  }
+  else if(curWayPoint == 3)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorToAngle(168);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+  else if(curWayPoint == 4)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorForward(3);
+      DataSent=true;
+      sweeping = false;
+    }
+  }
+  else if(curWayPoint == 5)
+  {
+    //DoCorrectionAngle(0, 80, true);
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorToAngle(258);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+  else if(curWayPoint == 6)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorForward(3);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+  else if(curWayPoint == 7)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorToAngle(348);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+  else if(curWayPoint == 8)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorForward(3);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+
+  if(curWayPoint >= 8)
+  {
+    curWayPoint = 1;
+  }
+
+}
+
+void DoWallFindingSquares()
+{
+  if(curWayPoint == 1)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorToAngle(78);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+  if(curWayPoint == 2)
+  {
+    AlignToWallOnLeft();
+  }
+  if(curWayPoint == 3)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorForward(4);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+  if(curWayPoint == 4)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorToAngle(curSystemAngle+90);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+  if(curWayPoint == 5)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorForward(4);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+}
+
+void DriveToCornerTest()
+{
+  if(curWayPoint == 1)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorToAngle(78);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+  if(curWayPoint == 2)
+  {
+    AlignToWallOnLeft();
+  }
+  if(curWayPoint == 3)
+  {
+    DriveToCornerLeft(5);
+  }
+}
+
 
 void loop()
 {
   DoSerialCommands();
 
+  //DoWallFindingSquares();
+  DriveToCornerTest();
   // if(curWayPoint == 0)
   // {
   //   DoCorrectionAngle(160, 200, true);
@@ -627,7 +1034,73 @@ void loop()
   //   if(!DataSent && !ManualMode)
   //   {
   //     FLUSHMOTORBUFFER();
-  //     MoveMotorToAngle(80);
+  //     MoveMotorToAngle(78);
+  //     DataSent = true;
+  //     sweeping = false;
+  //   }
+  // }
+  // if(curWayPoint == 2)
+  // {
+  //   AlignToWallOnLeft();
+  // }
+  // if(curWayPoint == 3)
+  // {
+  //   if(!DataSent && !ManualMode)
+  //   {
+  //     FLUSHMOTORBUFFER();
+  //     MoveMotorForward(4);
+  //     DataSent = true;
+  //     sweeping = false;
+  //   }
+  // }
+  // if(curWayPoint == 4)
+  // {
+  //   if(!DataSent && !ManualMode)
+  //   {
+  //     FLUSHMOTORBUFFER();
+  //     MoveMotorToAngle(258);
+  //     DataSent = true;
+  //     sweeping = false;
+  //   }
+  // }
+  // if(curWayPoint == 5)
+  // {
+  //   AlignToWallOnRight();
+  // }
+  // if(curWayPoint == 6)
+  // {
+  //   if(!DataSent && !ManualMode)
+  //   {
+  //     FLUSHMOTORBUFFER();
+  //     MoveMotorForward(4);
+  //     DataSent = true;
+  //     sweeping = false;
+  //   }
+  // }
+
+
+
+  // else if(curWayPoint == 3)
+  // {
+  //   if(!DataSent && !ManualMode)
+  //   {
+  //     FLUSHMOTORBUFFER();
+  //     MoveMotorToAngle(258);
+  //     DataSent = true;
+  //     sweeping = false;
+  //   }
+  // }
+  // else if(curWayPoint == 4)
+  // {
+  //   AlignToWallOnRight();
+  // }
+
+  // if(curWayPoint == 1)
+  // {
+  //   if(!DataSent && !ManualMode)
+  //   {
+  //     FLUSHMOTORBUFFER();
+  //     MoveMotorToAngle(222);
   //     DataSent = true;
   //     sweeping = false;
   //   }
@@ -637,38 +1110,70 @@ void loop()
   //   if(!DataSent && !ManualMode)
   //   {
   //     FLUSHMOTORBUFFER();
-  //     MoveMotorForward(2);
+  //     MoveMotorForward(3);
   //     DataSent = true;
   //     sweeping = false;
+  //     FLUSHMOTORBUFFER();
   //   }
   // }
   // else if(curWayPoint == 3)
   // {
-  //   if(!DataSent)
+  //   if(!DataSent && !ManualMode)
   //   {
   //     FLUSHMOTORBUFFER();
-  //     MoveMotorToAngle(170);
-  //     DataSent=true;
+  //     MoveMotorToAngle(312);
+  //     MoveMotorForward(2);
+  //     DataSent = true;
   //     sweeping = false;
   //   }
   // }
   // else if(curWayPoint == 4)
   // {
-  //   //DoCorrectionAngle(0, 80, true);
   //   if(!DataSent)
   //   {
   //     FLUSHMOTORBUFFER();
-  //     MoveMotorForward(2);
-  //     DataSent = true;
+  //     MoveMotorForward(3);
+  //     DataSent=true;
   //     sweeping = false;
   //   }
   // }
   // else if(curWayPoint == 5)
   // {
+  //   //DoCorrectionAngle(0, 80, true);
   //   if(!DataSent)
   //   {
   //     FLUSHMOTORBUFFER();
-  //     MoveMotorToAngle(260);
+  //     MoveMotorToAngle(42);
+  //     DataSent = true;
+  //     sweeping = false;
+  //   }
+  // }
+  // else if(curWayPoint == 6)
+  // {
+  //   if(!DataSent)
+  //   {
+  //     FLUSHMOTORBUFFER();
+  //     MoveMotorForward(3);
+  //     DataSent = true;
+  //     sweeping = false;
+  //   }
+  // }
+  // else if(curWayPoint == 7)
+  // {
+  //   if(!DataSent)
+  //   {
+  //     FLUSHMOTORBUFFER();
+  //     MoveMotorToAngle(132);
+  //     DataSent = true;
+  //     sweeping = false;
+  //   }
+  // }
+  // else if(curWayPoint == 8)
+  // {
+  //   if(!DataSent)
+  //   {
+  //     FLUSHMOTORBUFFER();
+  //     MoveMotorForward(3);
   //     DataSent = true;
   //     sweeping = false;
   //   }
@@ -718,6 +1223,11 @@ void loop()
   //   Serial.println("SWEEP ERROR");
   // }
 
+  if(!sweeping)
+  {
+    StepAndRead();
+  }
+
   if(CheckForMotionComplete() && !sweeping && !waitingForButton)
   {
     // Move on to next motion
@@ -730,6 +1240,10 @@ void loop()
   else if(waitingForButton && buttonPressed)
   {
      OnCompleteWayPoint();
+  }
+  else if(DoingAlgorithm && AlgorithmComplete)
+  {
+    OnCompleteWayPoint();
   }
 }
 
