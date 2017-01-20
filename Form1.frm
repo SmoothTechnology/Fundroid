@@ -2,23 +2,46 @@ VERSION 4.00
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   4140
-   ClientLeft      =   1695
-   ClientTop       =   1785
+   ClientLeft      =   1305
+   ClientTop       =   1665
    ClientWidth     =   6690
    Height          =   4545
-   Left            =   1635
+   Left            =   1245
    LinkTopic       =   "Form1"
    ScaleHeight     =   4140
    ScaleWidth      =   6690
-   Top             =   1440
+   Top             =   1320
    Width           =   6810
+   Begin VB.Timer Timer1 
+      Interval        =   120
+      Left            =   1320
+      Top             =   0
+   End
+   Begin VB.PictureBox Picture1 
+      Height          =   3495
+      Left            =   120
+      Picture         =   "Form1.frx":0000
+      ScaleHeight     =   3435
+      ScaleWidth      =   6435
+      TabIndex        =   1
+      Top             =   600
+      Width           =   6495
+   End
    Begin VB.CommandButton Command1 
       Caption         =   "Command1"
-      Height          =   855
-      Left            =   960
+      Height          =   495
+      Left            =   120
       TabIndex        =   0
-      Top             =   360
-      Width           =   2175
+      Top             =   0
+      Width           =   1095
+   End
+   Begin VB.Label Label1 
+      Caption         =   "Count "
+      Height          =   375
+      Left            =   2040
+      TabIndex        =   2
+      Top             =   0
+      Width           =   975
    End
 End
 Attribute VB_Name = "Form1"
@@ -97,7 +120,7 @@ Private Sub Command1_Click()
   End If
   ' Sleep (2000)
   ret = ReadFile(hSerial, buffer(1), 16, totalBytes, 0&)
-  text = text + buffer
+  text = StrConv(buffer, vbUnicode)
   Debug.Print "'" & text & "'"
   MsgBox ("got")
   MsgBox (text)
@@ -106,4 +129,11 @@ Private Sub Command1_Click()
   ' MsgBox (buffer)
   
 End Sub
+
+Private Sub Timer1_Timer()
+  Static Count As Integer
+  Count = Count + 1
+  Label1.Caption = Count
+End Sub
+
 
