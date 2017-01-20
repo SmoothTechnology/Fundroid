@@ -452,7 +452,7 @@ void Sweep(double fromAngle, double toAngle)
       curRead.angle = Angle;
       curRead.reading = distance;
       dataPoints[curDataPoints] = curRead;
-      curDataPoints++;
+      curDataPoints++; 
     }
     else if(GetAngleFromStep(curStep) > toAngle)
     {
@@ -590,6 +590,24 @@ void DoSerialCommands()
   }
 }
 
+/////////////////////////////////////////////////////////////////
+///////////////// CONSTANT RUN TIME OBSTACLE AVOIDANCE //////////
+long maxStep = 200;
+boolean GoingUp = 0;
+
+
+void StepAndRead()
+{
+  if(curStep == maxStep)
+  {
+
+  }
+}
+
+
+////////////////// END RUN TIME OBSTACLE AVOIDANCE //////////////
+////////////////////////////////////////////////////////////////
+
 ////////////////////////////////////////////////////////////////////
 ////////////////////// ALGORITHMS //////////////////////////////////
 boolean DoingAlgorithm = false;
@@ -629,6 +647,7 @@ void AlignToWallOnRight()
       else
       {
         int prevSysAngle = curSystemAngle;
+        FLUSHMOTORBUFFER();
         do
         {
           MoveMotorToAngle(prevSysAngle + angleDiff);
@@ -638,7 +657,7 @@ void AlignToWallOnRight()
     }while(DoingAlgorithm);
 }
 
-double expectedWallOnLeftAngle = -75.7;
+double expectedWallOnLeftAngle = -58.1;
 void AlignToWallOnLeft()
 {
       DoingAlgorithm = true;
@@ -658,11 +677,11 @@ void AlignToWallOnLeft()
           // Need Help
         }
 
-        double angleDiff = Angle - expectedWallOnRightAngle;
+        double angleDiff = Angle - expectedWallOnLeftAngle;
 
         Serial.println(angleDiff);
 
-        if(expectedWallOnRightAngle - acceptableWallAngleDiff < angleDiff && expectedWallOnRightAngle + acceptableWallAngleDiff > angleDiff)
+        if(expectedWallOnLeftAngle - acceptableWallAngleDiff < angleDiff && expectedWallOnLeftAngle + acceptableWallAngleDiff > angleDiff)
         {
           DoingAlgorithm = false;
           AlgorithmComplete = false;
@@ -671,9 +690,16 @@ void AlignToWallOnLeft()
         else
         {
           int prevSysAngle = curSystemAngle;
+          boolean dataSent = false;
+          FLUSHMOTORBUFFER();
           do
           {
-            MoveMotorToAngle(prevSysAngle + angleDiff);
+            if(!dataSent)
+            {
+              dataSent = true;
+              MoveMotorToAngle(prevSysAngle - angleDiff);
+            }
+            
           }while(!CheckForMotionComplete());
         }
 
@@ -692,63 +718,100 @@ void loop()
   //   DoCorrectionAngle(160, 200, true);
   // }
 
-  if(curWayPoint == 1)
-  {
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorToAngle(220);
-      DataSent = true;
-      sweeping = false;
-    }
-  }
-  else if(curWayPoint == 2)
-  {
-    if(!DataSent && !ManualMode)
-    {
-      AlignToWallOnRight();
-      DataSent = true;
-      sweeping = false;
-      FLUSHMOTORBUFFER();
-    }
-  }
+  // if(curWayPoint == 1)
+  // {
+  //   if(!DataSent && !ManualMode)
+  //   {
+  //     FLUSHMOTORBUFFER();
+  //     MoveMotorToAngle(78);
+  //     DataSent = true;
+  //     sweeping = false;
+  //   }
+  // }
+  // if(curWayPoint == 2)
+  // {
+  //   AlignToWallOnLeft();
+  // }
+
+  // if(curWayPoint == 1)
+  // {
+  //   if(!DataSent && !ManualMode)
+  //   {
+  //     FLUSHMOTORBUFFER();
+  //     MoveMotorToAngle(222);
+  //     DataSent = true;
+  //     sweeping = false;
+  //   }
+  // }
   // else if(curWayPoint == 2)
   // {
   //   if(!DataSent && !ManualMode)
   //   {
   //     FLUSHMOTORBUFFER();
-  //     MoveMotorForward(2);
+  //     MoveMotorForward(3);
   //     DataSent = true;
   //     sweeping = false;
+  //     FLUSHMOTORBUFFER();
   //   }
   // }
   // else if(curWayPoint == 3)
   // {
-  //   if(!DataSent)
+  //   if(!DataSent && !ManualMode)
   //   {
   //     FLUSHMOTORBUFFER();
-  //     MoveMotorToAngle(170);
-  //     DataSent=true;
+  //     MoveMotorToAngle(312);
+  //     MoveMotorForward(2);
+  //     DataSent = true;
   //     sweeping = false;
   //   }
   // }
   // else if(curWayPoint == 4)
   // {
-  //   //DoCorrectionAngle(0, 80, true);
   //   if(!DataSent)
   //   {
   //     FLUSHMOTORBUFFER();
-  //     MoveMotorForward(2);
-  //     DataSent = true;
+  //     MoveMotorForward(3);
+  //     DataSent=true;
   //     sweeping = false;
   //   }
   // }
   // else if(curWayPoint == 5)
   // {
+  //   //DoCorrectionAngle(0, 80, true);
   //   if(!DataSent)
   //   {
   //     FLUSHMOTORBUFFER();
-  //     MoveMotorToAngle(260);
+  //     MoveMotorToAngle(42);
+  //     DataSent = true;
+  //     sweeping = false;
+  //   }
+  // }
+  // else if(curWayPoint == 6)
+  // {
+  //   if(!DataSent)
+  //   {
+  //     FLUSHMOTORBUFFER();
+  //     MoveMotorForward(3);
+  //     DataSent = true;
+  //     sweeping = false;
+  //   }
+  // }
+  // else if(curWayPoint == 7)
+  // {
+  //   if(!DataSent)
+  //   {
+  //     FLUSHMOTORBUFFER();
+  //     MoveMotorToAngle(132);
+  //     DataSent = true;
+  //     sweeping = false;
+  //   }
+  // }
+  // else if(curWayPoint == 8)
+  // {
+  //   if(!DataSent)
+  //   {
+  //     FLUSHMOTORBUFFER();
+  //     MoveMotorForward(3);
   //     DataSent = true;
   //     sweeping = false;
   //   }
