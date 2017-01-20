@@ -617,7 +617,7 @@ void StepAndRead()
 ////////////////////// ALGORITHMS //////////////////////////////////
 
 double acceptableWallAngleDiff = 1.0;
-double expectedWallOnRightAngle = -58.09;
+double expectedWallOnRightAngle = -63;
 void AlignToWallOnRight()
 {
       DoingAlgorithm = true;
@@ -666,7 +666,7 @@ void AlignToWallOnRight()
     }while(DoingAlgorithm);
 }
 
-double expectedWallOnLeftAngle = -58.1;
+double expectedWallOnLeftAngle = -63;
 void AlignToWallOnLeft()
 {
       DoingAlgorithm = true;
@@ -842,6 +842,40 @@ void loop()
   if(curWayPoint == 2)
   {
     AlignToWallOnLeft();
+  }
+  if(curWayPoint == 3)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorForward(4);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+  if(curWayPoint == 4)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorToAngle(258);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+  if(curWayPoint == 5)
+  {
+    AlignToWallOnRight();
+  }
+  if(curWayPoint == 6)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorForward(4);
+      DataSent = true;
+      sweeping = false;
+    }
   }
   // else if(curWayPoint == 3)
   // {
