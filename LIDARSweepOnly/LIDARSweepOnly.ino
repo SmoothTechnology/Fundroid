@@ -484,6 +484,7 @@ void DoCorrectionAngle(int findLineFrom, int findLineTo, boolean wallOnRight)
       sweepTo = findLineTo;
       DataSent = true;
       sweeping = true;
+      SweepDone = false;
     }
 
     Sweep(sweepFrom, sweepTo);
@@ -621,11 +622,11 @@ void AlignToWallOnRight()
 {
       DoingAlgorithm = true;
       AlgorithmComplete = false;
-      sweepFrom = 0;
-      sweepTo = 80;
       
     do
     {
+      sweepFrom = 0;
+      sweepTo = 80;
 
       do
       {
@@ -649,11 +650,16 @@ void AlignToWallOnRight()
       }
       else
       {
+        boolean dataSent = false;
         int prevSysAngle = curSystemAngle;
         FLUSHMOTORBUFFER();
         do
         {
-          MoveMotorToAngle(prevSysAngle + angleDiff);
+          if(!dataSent)
+            {
+              dataSent = true;
+              MoveMotorToAngle(prevSysAngle - angleDiff);
+            }
         }while(!CheckForMotionComplete());
       }
 
@@ -665,16 +671,21 @@ void AlignToWallOnLeft()
 {
       DoingAlgorithm = true;
       AlgorithmComplete = false;
-      sweepFrom = 140;
-      sweepTo = 200;
 
       do
       {
+        sweepFrom = 140;
+        sweepTo = 200;
 
         do
         {
           DoCorrectionAngle(sweepFrom, sweepTo, true);
-        }while(!SweepDone && !SweepError);
+          Serial.print(SweepDone);
+          Serial.print(" ");
+          Serial.print(SweepError);
+          Serial.print(" ");
+          Serial.println(sweeping);
+        }while(!SweepDone && !SweepError && sweeping);
 
         if(SweepError)
         {
@@ -832,6 +843,20 @@ void loop()
   {
     AlignToWallOnLeft();
   }
+  // else if(curWayPoint == 3)
+  // {
+  //   if(!DataSent && !ManualMode)
+  //   {
+  //     FLUSHMOTORBUFFER();
+  //     MoveMotorToAngle(258);
+  //     DataSent = true;
+  //     sweeping = false;
+  //   }
+  // }
+  // else if(curWayPoint == 4)
+  // {
+  //   AlignToWallOnRight();
+  // }
 
   // if(curWayPoint == 1)
   // {
