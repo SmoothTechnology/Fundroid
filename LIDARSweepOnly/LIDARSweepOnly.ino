@@ -464,6 +464,7 @@ void Sweep(double fromAngle, double toAngle)
 ////////////////////// END LINE FINDING ////////////////////////////
 ///////////////////////////////////////////////////////////////////
 
+
 int curWayPoint = 0;
 boolean DataSent = false;
 boolean sweeping = false;
@@ -587,6 +588,30 @@ void DoSerialCommands()
     }
   }
 }
+
+////////////////////////////////////////////////////////////////////
+////////////////////// ALGORITHMS //////////////////////////////////
+boolean AlgorithmComplete = false;
+double expectedWallOnRightAngle = -75.7;
+void AlignToWallOnRight()
+{
+      sweepFrom = 0;
+      sweepTo = 80;
+      ManualMode = true;
+      DoCorrectionAngle(sweepFrom, sweepTo, true);
+}
+
+double expectedWallOnLeftAngle = -75.7;
+void AlignToWallOnRight()
+{
+      sweepFrom = 0;
+      sweepTo = 80;
+      ManualMode = true;
+      DoCorrectionAngle(sweepFrom, sweepTo, true);
+}
+
+/////////////////////// END ALGORITHMS //////////////////////////////
+////////////////////////////////////////////////////////////////////
 
 void loop()
 {
