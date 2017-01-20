@@ -805,6 +805,8 @@ void DriveToCornerRight(int distance)
 
     lastDistance = curDistance;
   }while(CheckForMotionComplete());
+
+  AlgorithmComplete = true;
 }
 
 void DriveToCornerLeft(int distance)
@@ -838,6 +840,8 @@ void DriveToCornerLeft(int distance)
 
     lastDistance = curDistance;
   }while(CheckForMotionComplete());
+
+  AlgorithmComplete = true;
 }
 
 /////////////////////// END ALGORITHMS //////////////////////////////
@@ -983,13 +987,35 @@ void DoWallFindingSquares()
   }
 }
 
+void DriveToCornerTest()
+{
+  if(curWayPoint == 1)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorToAngle(78);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+  if(curWayPoint == 2)
+  {
+    AlignToWallOnLeft();
+  }
+  if(curWayPoint == 3)
+  {
+    DriveToCornerLeft(5);
+  }
+}
+
 
 void loop()
 {
   DoSerialCommands();
 
-  DoWallFindingSquares();
-
+  //DoWallFindingSquares();
+  DriveToCornerTest();
   // if(curWayPoint == 0)
   // {
   //   DoCorrectionAngle(160, 200, true);
