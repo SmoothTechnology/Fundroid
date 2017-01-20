@@ -860,12 +860,60 @@ void DoSquares()
 
 }
 
+void DoWallFindingSquares()
+{
+  if(curWayPoint == 1)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorToAngle(78);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+  if(curWayPoint == 2)
+  {
+    AlignToWallOnLeft();
+  }
+  if(curWayPoint == 3)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorForward(4);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+  if(curWayPoint == 4)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorToAngle(curSystemAngle+90);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+  if(curWayPoint == 5)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorForward(4);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+}
+
 
 void loop()
 {
   DoSerialCommands();
 
-  DoSquares();
+  DoWallFindingSquares();
 
   // if(curWayPoint == 0)
   // {
