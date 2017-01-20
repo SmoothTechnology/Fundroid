@@ -641,7 +641,7 @@ void AlignToWallOnRight()
 
       Serial.println(angleDiff);
 
-      if(expectedWallOnRightAngle - acceptableWallAngleDiff < angleDiff && expectedWallOnRightAngle + acceptableWallAngleDiff > angleDiff)
+      if(expectedWallOnRightAngle - acceptableWallAngleDiff < Angle && expectedWallOnRightAngle + acceptableWallAngleDiff > Angle)
       {
         DoingAlgorithm = false;
         AlgorithmComplete = true;
@@ -685,10 +685,11 @@ void AlignToWallOnLeft()
 
         Serial.println(angleDiff);
 
-        if(expectedWallOnLeftAngle - acceptableWallAngleDiff < angleDiff && expectedWallOnLeftAngle + acceptableWallAngleDiff > angleDiff)
+        if(expectedWallOnLeftAngle - acceptableWallAngleDiff < Angle && expectedWallOnLeftAngle + acceptableWallAngleDiff > Angle)
         {
           DoingAlgorithm = false;
           AlgorithmComplete = true;
+          Serial.println("Found Acceptable Wall angle!");
           break;
         }
         else
@@ -810,27 +811,27 @@ void loop()
 {
   DoSerialCommands();
 
-  DoSquares();
+  //DoSquares();
 
   // if(curWayPoint == 0)
   // {
   //   DoCorrectionAngle(160, 200, true);
   // }
 
-  // if(curWayPoint == 1)
-  // {
-  //   if(!DataSent && !ManualMode)
-  //   {
-  //     FLUSHMOTORBUFFER();
-  //     MoveMotorToAngle(78);
-  //     DataSent = true;
-  //     sweeping = false;
-  //   }
-  // }
-  // if(curWayPoint == 2)
-  // {
-  //   AlignToWallOnLeft();
-  // }
+  if(curWayPoint == 1)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorToAngle(78);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+  if(curWayPoint == 2)
+  {
+    AlignToWallOnLeft();
+  }
 
   // if(curWayPoint == 1)
   // {
