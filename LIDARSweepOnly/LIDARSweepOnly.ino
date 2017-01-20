@@ -793,6 +793,11 @@ void DriveToCornerRight(int distance)
   {
     int curDistance = myLidarLite.distance();
 
+    while(curDistance <= 2)
+    {
+      curDistance = myLidarLite.distance();
+    }
+
     if(abs(curDistance - lastDistance) > allowableSlope)
     {
       StopMotor();
@@ -820,6 +825,11 @@ void DriveToCornerLeft(int distance)
   do
   {
     int curDistance = myLidarLite.distance();
+
+    while(curDistance <= 2)
+    {
+      curDistance = myLidarLite.distance();
+    }
 
     if(abs(curDistance - lastDistance) > allowableSlope)
     {
