@@ -781,9 +781,11 @@ void DriveToCornerRight(int distance)
   int stepperAngleToRight = 20;
   int allowableSlope = 10;
   int lastDistance = 0;
+  boolean wallFound = false;
+
+  Serial.println("Drive to Corner Right");
 
   StepToSpecificPosition(stepperAngleToRight);
-
   lastDistance = myLidarLite.distance();
 
   FLUSHMOTORBUFFER();
@@ -804,7 +806,7 @@ void DriveToCornerRight(int distance)
     }
 
     lastDistance = curDistance;
-  }while(CheckForMotionComplete());
+  }while(!wallFound);
 
   AlgorithmComplete = true;
 }
@@ -817,6 +819,9 @@ void DriveToCornerLeft(int distance)
   int stepperAngleToLeft = 220;
   int allowableSlope = 10;
   int lastDistance = 0;
+  boolean wallFound = false;
+
+  Serial.println("Drive to Corner Left");
 
   StepToSpecificPosition(stepperAngleToLeft);
   lastDistance = myLidarLite.distance();
@@ -827,6 +832,8 @@ void DriveToCornerLeft(int distance)
   do
   {
     int curDistance = myLidarLite.distance();
+    Serial.print("Distance: ");
+    Serial.println(curDistance);
 
     while(curDistance <= 2)
     {
@@ -836,10 +843,11 @@ void DriveToCornerLeft(int distance)
     if(abs(curDistance - lastDistance) > allowableSlope)
     {
       StopMotor();
+      wallFound = true;
     }
 
     lastDistance = curDistance;
-  }while(CheckForMotionComplete());
+  }while(!wallFound);
 
   AlgorithmComplete = true;
 }
