@@ -294,6 +294,7 @@ double acceptableRSquared = 0.90;
 
 double FindBestFitLineInDataSet(REAL x[], REAL y[], int n, int WallShouldBeOnRight)
 {
+  SweepError = false;
   int acceptableNumberOfReads = 3;
   double outlierThreshold = 30.0;
   int maxCycles = 5;
@@ -591,23 +592,92 @@ void DoSerialCommands()
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////// ALGORITHMS //////////////////////////////////
+boolean DoingAlgorithm = false;
 boolean AlgorithmComplete = false;
-double expectedWallOnRightAngle = -75.7;
+
+double acceptableWallAngleDiff = 1.0;
+double expectedWallOnRightAngle = -58.09;
 void AlignToWallOnRight()
 {
+      DoingAlgorithm = true;
       sweepFrom = 0;
       sweepTo = 80;
-      ManualMode = true;
-      DoCorrectionAngle(sweepFrom, sweepTo, true);
+      
+    do
+    {
+
+      do
+      {
+        DoCorrectionAngle(sweepFrom, sweepTo, true);
+      }while(!SweepDone && !SweepError);
+
+      if(SweepError)
+      {
+        // Need Help
+      }
+
+      double angleDiff = Angle - expectedWallOnRightAngle;
+
+      Serial.println(angleDiff);
+
+      if(expectedWallOnRightAngle - acceptableWallAngleDiff < angleDiff && expectedWallOnRightAngle + acceptableWallAngleDiff > angleDiff)
+      {
+        DoingAlgorithm = false;
+        AlgorithmComplete = false;
+        break;
+      }
+      else
+      {
+        int prevSysAngle = curSystemAngle;
+        do
+        {
+          MoveMotorToAngle(prevSysAngle + angleDiff);
+        }while(!CheckForMotionComplete());
+      }
+
+    }while(DoingAlgorithm);
 }
 
 double expectedWallOnLeftAngle = -75.7;
-void AlignToWallOnRight()
+void AlignToWallOnLeft()
 {
-      sweepFrom = 0;
-      sweepTo = 80;
+      DoingAlgorithm = true;
+      sweepFrom = 140;
+      sweepTo = 200;
       ManualMode = true;
-      DoCorrectionAngle(sweepFrom, sweepTo, true);
+      do
+      {
+
+        do
+        {
+          DoCorrectionAngle(sweepFrom, sweepTo, true);
+        }while(!SweepDone && !SweepError);
+
+        if(SweepError)
+        {
+          // Need Help
+        }
+
+        double angleDiff = Angle - expectedWallOnRightAngle;
+
+        Serial.println(angleDiff);
+
+        if(expectedWallOnRightAngle - acceptableWallAngleDiff < angleDiff && expectedWallOnRightAngle + acceptableWallAngleDiff > angleDiff)
+        {
+          DoingAlgorithm = false;
+          AlgorithmComplete = false;
+          break;
+        }
+        else
+        {
+          int prevSysAngle = curSystemAngle;
+          do
+          {
+            MoveMotorToAngle(prevSysAngle + angleDiff);
+          }while(!CheckForMotionComplete());
+        }
+
+    }while(DoingAlgorithm);
 }
 
 /////////////////////// END ALGORITHMS //////////////////////////////
@@ -622,16 +692,26 @@ void loop()
   //   DoCorrectionAngle(160, 200, true);
   // }
 
-  // if(curWayPoint == 1)
-  // {
-  //   if(!DataSent && !ManualMode)
-  //   {
-  //     FLUSHMOTORBUFFER();
-  //     MoveMotorToAngle(80);
-  //     DataSent = true;
-  //     sweeping = false;
-  //   }
-  // }
+  if(curWayPoint == 1)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorToAngle(220);
+      DataSent = true;
+      sweeping = false;
+    }
+  }
+  else if(curWayPoint == 2)
+  {
+    if(!DataSent && !ManualMode)
+    {
+      AlignToWallOnRight();
+      DataSent = true;
+      sweeping = false;
+      FLUSHMOTORBUFFER();
+    }
+  }
   // else if(curWayPoint == 2)
   // {
   //   if(!DataSent && !ManualMode)
