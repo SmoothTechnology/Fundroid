@@ -901,6 +901,11 @@ void GetToWallDistanceRight(int wantedDistance)
   // Calculate difference in distance
   int distDiff = wantedDistance - dist;
 
+  Serial.print("ReadDist: ");
+  Serial.print(dist);
+  Serial.print(" DistDiff");
+  Serial.println(distDiff);
+
   // Move to position in Right Angles 
   int MoveAngle = 0;
   if(distDiff < 0)
@@ -920,8 +925,10 @@ void GetToWallDistanceRight(int wantedDistance)
   FLUSHMOTORBUFFER();
   while(!CheckForMotionComplete()) {};
 
-  double distDiffF = distDiff;
-  distDiffF = distDiffF / 1000;
+  double distDiffF = abs(distDiff);
+  distDiffF = distDiffF / 100;
+
+  Serial.println(distDiffF);
 
   MoveMotorForward(distDiffF);
   FLUSHMOTORBUFFER();
@@ -944,6 +951,8 @@ void GetToWallDistanceRight(int wantedDistance)
   MoveMotorToAngle(MoveAngle);
   FLUSHMOTORBUFFER();
   while(!CheckForMotionComplete()) {};
+
+  AlgorithmComplete = true;
   
 }
 
@@ -1200,11 +1209,20 @@ void loop()
   DoSerialCommands();
 
   // EXECUTE YOUR PROGRAMS INSIDE OF HERE
-  if(!ManualMode)
+  // if(!ManualMode)
+  // {
+  //   //DoWallFindingSquares();
+  //   //DriveToCornerTest();
+  //   DoSquares();
+  // }
+
+  if(curWayPoint == 1)
   {
-    //DoWallFindingSquares();
-    //DriveToCornerTest();
-    DoSquares();
+    TurnToAngleComplete(238);
+  }
+  else if(curWayPoint == 2)
+  {
+    GetToWallDistanceRight(300);
   }
   
   // if(curWayPoint == 0)
