@@ -901,6 +901,12 @@ void GetToWallDistanceRight(int wantedDistance)
   // Calculate difference in distance
   int distDiff = wantedDistance - dist;
 
+  if(abs(distDiff) < distanceMarginOfError)
+  {
+    AlgorithmComplete = true;
+    return;
+  }
+
   Serial.print("ReadDist: ");
   Serial.print(dist);
   Serial.print(" DistDiff");
