@@ -944,9 +944,6 @@ void GetToWallDistanceRight(int wantedDistance)
   MoveMotorToAngle(MoveAngle);
   FLUSHMOTORBUFFER();
   while(!CheckForMotionComplete()) {};
-
-  
-  
   
 }
 
