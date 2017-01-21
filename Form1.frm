@@ -1,17 +1,17 @@
 VERSION 4.00
 Begin VB.Form Form1 
    Caption         =   "Form1"
-   ClientHeight    =   4140
-   ClientLeft      =   1305
-   ClientTop       =   1665
-   ClientWidth     =   6690
-   Height          =   4545
-   Left            =   1245
+   ClientHeight    =   4170
+   ClientLeft      =   1470
+   ClientTop       =   2295
+   ClientWidth     =   6675
+   Height          =   4575
+   Left            =   1410
    LinkTopic       =   "Form1"
-   ScaleHeight     =   4140
-   ScaleWidth      =   6690
-   Top             =   1320
-   Width           =   6810
+   ScaleHeight     =   4170
+   ScaleWidth      =   6675
+   Top             =   1950
+   Width           =   6795
    Begin VB.Timer Timer1 
       Interval        =   120
       Left            =   1320
@@ -109,7 +109,7 @@ Private Sub Command1_Click()
   Dim buffer(1 To 16) As Byte
   Dim totalBytes As Long
   Dim ret As Long
-  Dim text As String
+  Dim Text As String
   Dim of As OFSTRUCT
   ' Dim sec As SECURITY_ATTRIBUTES
   ' sec.nLength = 0
@@ -120,10 +120,10 @@ Private Sub Command1_Click()
   End If
   ' Sleep (2000)
   ret = ReadFile(hSerial, buffer(1), 16, totalBytes, 0&)
-  text = StrConv(buffer, vbUnicode)
-  Debug.Print "'" & text & "'"
+  Text = StrConv(buffer, vbUnicode)
+  Debug.Print "'" & Text & "'"
   MsgBox ("got")
-  MsgBox (text)
+  MsgBox (Text)
   
   
   ' MsgBox (buffer)
@@ -132,8 +132,23 @@ End Sub
 
 Private Sub Timer1_Timer()
   Static Count As Integer
+  Dim Text As String
+  Dim Part As String
+  Dim Part2 As String
+  Dim Num As Integer
   Count = Count + 1
   Label1.Caption = Count
+  
+  Text = "123:456"
+  Part = Mid(Text, 1, 3)
+  Part2 = Mid(Text, 5, 3)
+  Num = Val(Part) + Val(Part2)
+ 
+  Picture1.Picture = LoadPicture("c:\code\helloworld\map.bmp")
+  Picture1.FillColor = vbBlack
+  Picture1.FillStyle = vbSolid
+  Picture1.Circle (Count * 100 + 200, Count * 100 + 400), 600, vbBlack
+  
 End Sub
 
 
