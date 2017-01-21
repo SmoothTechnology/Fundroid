@@ -655,15 +655,28 @@ void StepAndRead()
     Serial.print(" Reading: ");
     Serial.println(curRead.reading);
 
-    if(distance < 100)
+    int numValidReadings = 0;
+
+    while(distance < 100 && distance >= 2)
     {
-      StopMotor();
+      numValidReadings++;
+
+      distance = myLidarLite.distance();
+
+      if(numValidReadings > 3) // 4 Valid readings needed to stop
+      {
+        StopMotor();
+
+        while(distance < 100 || distance <= 2)
+        {
+          distance = myLidarLite.distance();
+        }
+
+        return;
+      }
     }
 
-    while(distance < 100 || distance <= 2)
-    {
-      distance = myLidarLite.distance();
-    }
+
   }
 
 }
@@ -872,141 +885,147 @@ void DriveToCornerLeft(int distance)
 ////////////////////////////////////////////////////////////////////
 void DoSquares()
 {
+  if(!ManualMode)
+  {
+    if(curWayPoint == 1)
+    {
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorToAngle(78);
+        DataSent = true;
+        sweeping = false;
+      }
+    }
+    else if(curWayPoint == 2)
+    {
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorForward(3);
+        DataSent = true;
+        sweeping = false;
+        FLUSHMOTORBUFFER();
+      }
+    }
+    else if(curWayPoint == 3)
+    {
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorToAngle(168);
+        DataSent = true;
+        sweeping = false;
+      }
+    }
+    else if(curWayPoint == 4)
+    {
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorForward(3);
+        DataSent=true;
+        sweeping = false;
+      }
+    }
+    else if(curWayPoint == 5)
+    {
+      //DoCorrectionAngle(0, 80, true);
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorToAngle(258);
+        DataSent = true;
+        sweeping = false;
+      }
+    }
+    else if(curWayPoint == 6)
+    {
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorForward(3);
+        DataSent = true;
+        sweeping = false;
+      }
+    }
+    else if(curWayPoint == 7)
+    {
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorToAngle(348);
+        DataSent = true;
+        sweeping = false;
+      }
+    }
+    else if(curWayPoint == 8)
+    {
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorForward(3);
+        DataSent = true;
+        sweeping = false;
+      }
+    }
 
-  if(curWayPoint == 1)
-  {
-    if(!DataSent && !ManualMode)
+    if(curWayPoint >= 8)
     {
-      FLUSHMOTORBUFFER();
-      MoveMotorToAngle(78);
-      DataSent = true;
-      sweeping = false;
+      curWayPoint = 1;
     }
   }
-  else if(curWayPoint == 2)
-  {
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorForward(3);
-      DataSent = true;
-      sweeping = false;
-      FLUSHMOTORBUFFER();
-    }
-  }
-  else if(curWayPoint == 3)
-  {
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorToAngle(168);
-      DataSent = true;
-      sweeping = false;
-    }
-  }
-  else if(curWayPoint == 4)
-  {
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorForward(3);
-      DataSent=true;
-      sweeping = false;
-    }
-  }
-  else if(curWayPoint == 5)
-  {
-    //DoCorrectionAngle(0, 80, true);
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorToAngle(258);
-      DataSent = true;
-      sweeping = false;
-    }
-  }
-  else if(curWayPoint == 6)
-  {
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorForward(3);
-      DataSent = true;
-      sweeping = false;
-    }
-  }
-  else if(curWayPoint == 7)
-  {
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorToAngle(348);
-      DataSent = true;
-      sweeping = false;
-    }
-  }
-  else if(curWayPoint == 8)
-  {
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorForward(3);
-      DataSent = true;
-      sweeping = false;
-    }
-  }
-
-  if(curWayPoint >= 8)
-  {
-    curWayPoint = 1;
-  }
+  
 
 }
 
 void DoWallFindingSquares()
 {
-  if(curWayPoint == 1)
+  if(!ManualMode)
   {
-    if(!DataSent && !ManualMode)
+    if(curWayPoint == 1)
     {
-      FLUSHMOTORBUFFER();
-      MoveMotorToAngle(78);
-      DataSent = true;
-      sweeping = false;
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorToAngle(78);
+        DataSent = true;
+        sweeping = false;
+      }
     }
-  }
-  if(curWayPoint == 2)
-  {
-    AlignToWallOnLeft();
-  }
-  if(curWayPoint == 3)
-  {
-    if(!DataSent && !ManualMode)
+    if(curWayPoint == 2)
     {
-      FLUSHMOTORBUFFER();
-      MoveMotorForward(4);
-      DataSent = true;
-      sweeping = false;
+      AlignToWallOnLeft();
     }
-  }
-  if(curWayPoint == 4)
-  {
-    if(!DataSent && !ManualMode)
+    if(curWayPoint == 3)
     {
-      FLUSHMOTORBUFFER();
-      MoveMotorToAngle(curSystemAngle+90);
-      DataSent = true;
-      sweeping = false;
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorForward(4);
+        DataSent = true;
+        sweeping = false;
+      }
     }
-  }
-  if(curWayPoint == 5)
-  {
-    if(!DataSent && !ManualMode)
+    if(curWayPoint == 4)
     {
-      FLUSHMOTORBUFFER();
-      MoveMotorForward(4);
-      DataSent = true;
-      sweeping = false;
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorToAngle(curSystemAngle+90);
+        DataSent = true;
+        sweeping = false;
+      }
+    }
+    if(curWayPoint == 5)
+    {
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorForward(4);
+        DataSent = true;
+        sweeping = false;
+      }
     }
   }
 }
@@ -1033,6 +1052,82 @@ void DriveToCornerTest()
   }
 }
 
+void TurnToAngleComplete(int angle)
+{
+  if(!DataSent && !ManualMode)
+  {
+    FLUSHMOTORBUFFER();
+    MoveMotorToAngle(angle);
+    DataSent = true;
+    sweeping = false;
+  }
+}
+
+void GoToPositionComplete(float meters)
+{
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorForward(meters);
+      DataSent = true;
+      sweeping = false;
+    }
+}
+
+void GoToPizzaShop()
+{
+  if(!ManualMode)
+  {
+    if(curWayPoint == 1) // Wait for Button Press
+    {
+      IsButtonPressed();
+    }
+    else if(curWayPoint == 2) // Turn toward Pioneer Works door
+    {
+      TurnToAngleComplete(68);
+    }
+    else if(curWayPoint == 3) // Leave through pioneer works garage - 4m
+    {
+      GoToPositionComplete(4);
+    }
+    else if(curWayPoint == 4) // Turn to look up
+    {
+      TurnToAngleComplete(curSystemAngle + 90);
+    }
+    else if(curWayPoint == 5) // Wait for button press after garage door lowered
+    {
+      IsButtonPressed();
+    }
+    else if(curWayPoint == 6) // Align to the garage door on right
+    {
+      AlignToWallOnRight();
+    }
+    else if(curWayPoint == 7) // Start to drive
+    {
+      GoToPositionComplete(5);
+    }
+    else if(curWayPoint == 8) // Align
+    {
+      AlignToWallOnRight();
+    }
+
+
+    else if(curWayPoint == 20) // Find The Corner
+    {
+      DriveToCornerRight(3);
+    }
+    else if(curWayPoint == 21) // Drive past Corner 
+    {
+      GoToPositionComplete(2);
+    }
+    else if(curWayPoint == 22) // Turn down Pioneer St
+    {
+      TurnToAngleComplete(curSystemAngle + 90);
+    }
+  }
+  
+}
+
 
 void loop()
 {
@@ -1045,10 +1140,7 @@ void loop()
   //   DoCorrectionAngle(160, 200, true);
   // }
 
-  if(curWayPoint == 1)
-  {
-    IsButtonPressed();
-  }
+  
 
   // if(curWayPoint == 1)
   // {
