@@ -26,6 +26,7 @@
 #include <math.h>
 
 #define MOTORCOMMPORT Serial1
+#define BTN_PIN   4
 
 #define REAL double
 #define MAX_READS 600
@@ -178,6 +179,8 @@ void setup()
 
   pinMode(dirPin, OUTPUT);
   pinMode(stepPin, OUTPUT);
+  pinMode(BTN_PIN, INPUT);
+  digitalWrite(BTN_PIN, HIGH);
   
   digitalWrite(dirPin, 0);
   digitalWrite(stepPin, 0);
@@ -594,6 +597,19 @@ void DoSerialCommands()
       ManualMode = true;
       DoCorrectionAngle(sweepFrom, sweepTo, true);
     }
+  }
+}
+
+void IsButtonPressed()
+{
+  FLUSHMOTORBUFFER();
+  waitingForButton = true;
+  buttonPressed = false;
+
+  if(digitalRead(BTN_PIN) == 0)
+  {
+    buttonPressed = true;
+    delay(50); // Debounce in the hacky way!
   }
 }
 
@@ -1028,6 +1044,11 @@ void loop()
   // {
   //   DoCorrectionAngle(160, 200, true);
   // }
+
+  if(curWayPoint == 1)
+  {
+    IsButtonPressed();
+  }
 
   // if(curWayPoint == 1)
   // {
