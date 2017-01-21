@@ -883,6 +883,73 @@ void DriveToCornerLeft(int distance)
   AlgorithmComplete = true;
 }
 
+void GetToWallDistanceRight(int wantedDistance)
+{
+  Initialize();
+  DoingAlgorithm = true;
+  AlgorithmComplete = false;
+  int stepperAngleToRight = 20;
+  int distanceMarginOfError = 10;
+  boolean wallFound = false;
+
+  Serial.println("Go To Wall Distance Right");
+
+  // Read Wall
+  StepToSpecificPosition(stepperAngleToRight);
+  int dist = myLidarLite.distance();
+
+  // Calculate difference in distance
+  int distDiff = wantedDistance - dist;
+
+  // Move to position in Right Angles 
+  int MoveAngle = 0;
+  if(distDiff < 0)
+  {
+    MoveAngle = curSystemAngle + 90;
+    if(MoveAngle > 360)
+      MoveAngle = MoveAngle - 360;
+  }
+  else
+  {
+    MoveAngle = curSystemAngle - 90;
+    if(MoveAngle < 0)
+      MoveAngle = MoveAngle + 360;
+  }
+  
+  MoveMotorToAngle(MoveAngle);
+  FLUSHMOTORBUFFER();
+  while(!CheckForMotionComplete()) {};
+
+  double distDiffF = distDiff;
+  distDiffF = distDiffF / 1000;
+
+  MoveMotorForward(distDiffF);
+  FLUSHMOTORBUFFER();
+  while(!CheckForMotionComplete()) {};
+
+  if(distDiff < 0)
+  {
+    MoveAngle = curSystemAngle - 90;
+    if(MoveAngle < 0)
+      MoveAngle = MoveAngle + 360;
+  }
+  else
+  {
+    MoveAngle = curSystemAngle + 90;
+    if(MoveAngle > 360)
+      MoveAngle = MoveAngle - 360;
+  }
+  
+
+  MoveMotorToAngle(MoveAngle);
+  FLUSHMOTORBUFFER();
+  while(!CheckForMotionComplete()) {};
+
+  
+  
+  
+}
+
 /////////////////////// END ALGORITHMS //////////////////////////////
 ////////////////////////////////////////////////////////////////////
 void DoSquares()
