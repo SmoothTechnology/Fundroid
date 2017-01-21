@@ -1249,7 +1249,7 @@ void loop()
     StepAndRead();
   }
 
-  if(CheckForMotionComplete() && !sweeping && !waitingForButton)
+  if(CheckForMotionComplete() && !sweeping && !waitingForButton && !DoingAlgorithm)
   {
     // Move on to next motion
     OnCompleteWayPoint();
