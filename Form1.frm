@@ -1,35 +1,35 @@
 VERSION 4.00
 Begin VB.Form Form1 
    Caption         =   "Form1"
-   ClientHeight    =   4170
-   ClientLeft      =   1470
-   ClientTop       =   2295
-   ClientWidth     =   6675
-   Height          =   4575
-   Left            =   1410
+   ClientHeight    =   8205
+   ClientLeft      =   1455
+   ClientTop       =   2280
+   ClientWidth     =   11880
+   Height          =   8610
+   Left            =   1395
    LinkTopic       =   "Form1"
-   ScaleHeight     =   4170
-   ScaleWidth      =   6675
-   Top             =   1950
-   Width           =   6795
+   ScaleHeight     =   8205
+   ScaleWidth      =   11880
+   Top             =   1935
+   Width           =   12000
    Begin VB.Timer Timer1 
       Interval        =   120
       Left            =   1320
       Top             =   0
    End
    Begin VB.PictureBox Picture1 
-      Height          =   3495
-      Left            =   120
-      Picture         =   "Form1.frx":0000
-      ScaleHeight     =   3435
-      ScaleWidth      =   6435
+      Height          =   7935
+      Left            =   0
+      Picture         =   "FORM1.frx":0000
+      ScaleHeight     =   7875
+      ScaleWidth      =   11715
       TabIndex        =   1
-      Top             =   600
-      Width           =   6495
+      Top             =   240
+      Width           =   11775
    End
    Begin VB.CommandButton Command1 
       Caption         =   "Command1"
-      Height          =   495
+      Height          =   255
       Left            =   120
       TabIndex        =   0
       Top             =   0
@@ -37,7 +37,7 @@ Begin VB.Form Form1
    End
    Begin VB.Label Label1 
       Caption         =   "Count "
-      Height          =   375
+      Height          =   255
       Left            =   2040
       TabIndex        =   2
       Top             =   0
@@ -136,19 +136,29 @@ Private Sub Timer1_Timer()
   Dim Part As String
   Dim Part2 As String
   Dim Num As Integer
+  ' Count up each frame.
   Count = Count + 1
   Label1.Caption = Count
   
-  Text = "123:456"
-  Part = Mid(Text, 1, 3)
-  Part2 = Mid(Text, 5, 3)
-  Num = Val(Part) + Val(Part2)
- 
-  Picture1.Picture = LoadPicture("c:\code\helloworld\map.bmp")
-  Picture1.FillColor = vbBlack
-  Picture1.FillStyle = vbSolid
-  Picture1.Circle (Count * 100 + 200, Count * 100 + 400), 600, vbBlack
+  ' Flash a hello message.
+  If Count Mod 10 > 7 Then
+    Picture1.Picture = LoadPicture("c:\code\fundroid\hello.bmp")
+  Else
   
+    ' Simulate parsing messages from the Arduino.
+    ' See "Command1" for how to read a port.
+    Text = "123:456"
+    Part = Mid(Text, 1, 3)
+    Part2 = Mid(Text, 5, 3)
+    Num = Val(Part) + Val(Part2)
+ 
+    ' Load the map image.
+    Picture1.Picture = LoadPicture("c:\code\fundroid\map.bmp")
+    ' Draw a large circle on it.
+    Picture1.FillColor = vbBlack
+    Picture1.FillStyle = vbSolid
+    Picture1.Circle (Count * 100 + 200, Count * 100 + 400), 600, vbBlack
+    
+  End If
 End Sub
-
 
