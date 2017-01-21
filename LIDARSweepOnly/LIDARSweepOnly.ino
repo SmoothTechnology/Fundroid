@@ -832,6 +832,7 @@ void DriveToCornerRight(int distance)
     if(abs(curDistance - lastDistance) > allowableSlope)
     {
       StopMotor();
+      wallFound = true;
     }
 
     lastDistance = curDistance;
