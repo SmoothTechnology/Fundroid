@@ -666,6 +666,7 @@ void StepAndRead()
       if(numValidReadings > 3) // 4 Valid readings needed to stop
       {
         StopMotor();
+        ManualMode = true;
 
         while(distance < 100 || distance <= 2)
         {
@@ -1138,7 +1139,8 @@ void loop()
   if(!ManualMode)
   {
     //DoWallFindingSquares();
-    DriveToCornerTest();
+    //DriveToCornerTest();
+    DoSquares();
   }
   
   // if(curWayPoint == 0)
@@ -1342,7 +1344,7 @@ void loop()
   //   Serial.println("SWEEP ERROR");
   // }
 
-  if(!sweeping)
+  if(!sweeping && curWayPoint > 0)
   {
     StepAndRead();
   }
