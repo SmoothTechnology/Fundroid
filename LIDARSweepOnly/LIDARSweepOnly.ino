@@ -1133,8 +1133,13 @@ void loop()
 {
   DoSerialCommands();
 
-  //DoWallFindingSquares();
-  DriveToCornerTest();
+  // EXECUTE YOUR PROGRAMS INSIDE OF HERE
+  if(!ManualMode)
+  {
+    //DoWallFindingSquares();
+    DriveToCornerTest();
+  }
+  
   // if(curWayPoint == 0)
   // {
   //   DoCorrectionAngle(160, 200, true);
