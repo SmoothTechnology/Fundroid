@@ -26,7 +26,7 @@
 #include <math.h>
 
 #define MOTORCOMMPORT Serial1
-#define BTN_PIN   4
+#define BTN_PIN   6
 
 #define REAL double
 #define MAX_READS 600
