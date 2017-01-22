@@ -671,7 +671,7 @@ void StepAndRead()
 
     int numValidReadings = 0;
 
-    while(distance < 100 && distance >= 2)
+    while(distance < 40 && distance >= 2)
     {
       numValidReadings++;
 
@@ -682,7 +682,7 @@ void StepAndRead()
         StopMotor();
         ManualMode = true;
 
-        while(distance < 100 || distance <= 2)
+        while(distance < 40 || distance <= 2)
         {
           distance = myLidarLite.distance();
         }
@@ -838,6 +838,8 @@ void DriveToCornerRight(int distance)
   do
   {
     int curDistance = myLidarLite.distance();
+    Serial.print("Distance: ");
+    Serial.println(curDistance);
 
     while(curDistance <= 2)
     {
@@ -851,6 +853,8 @@ void DriveToCornerRight(int distance)
     }
 
     lastDistance = curDistance;
+
+    delay(50);
   }while(!wallFound);
 
   AlgorithmComplete = true;
@@ -892,6 +896,8 @@ void DriveToCornerLeft(int distance)
     }
 
     lastDistance = curDistance;
+
+    delay(50);
   }while(!wallFound);
 
   AlgorithmComplete = true;
@@ -1303,7 +1309,7 @@ void GoToPizzaShop()
   }
   else if(curWayPoint == 8) // Get distance to wall
   {
-    GetToWallDistanceRight(200)
+    GetToWallDistanceRight(200);
   }
   else if(curWayPoint == 9) // start to move
   {
@@ -1352,10 +1358,12 @@ void GoToPizzaShop()
   else if(curWayPoint == 20)
   {
     GetToWallDistanceRight(250);
+    //TurnToAngleComplete(155);
   }
   else if(curWayPoint == 21)
   {
     GoToPositionComplete(6); // 64m
+    //AlignToWallOnRight();
   }
   else if(curWayPoint == 22)
   {
@@ -1363,7 +1371,7 @@ void GoToPizzaShop()
   }
   else if(curWayPoint == 23)
   {
-    DriveToCornerRight(5); // This will end once hitting the wood stuff.. 15.5m from corner to Marks
+    DriveToCornerRight(10); // This will end once hitting the wood stuff.. 15.5m from corner to Marks
   }
   else if(curWayPoint == 24)
   {
@@ -1379,23 +1387,25 @@ void GoToPizzaShop()
   }
   else if(curWayPoint == 27)
   {
-    DriveToCornerRight(8); // Find end of trash cans
+    GoToPositionComplete(3);
   }
   else if(curWayPoint == 28)
   {
-    GoToPositionComplete(1);
+    GetToWallDistanceRight(125);
   }
+
+
   else if(curWayPoint == 29)
   {
-    GetToWallDistanceRight(200);
+    DriveToCornerRight(5); // Find end of trash cans
   }
   else if(curWayPoint == 30)
   {
-    IsButtonPressed();
+    GoToPositionComplete(1);
   }
   else if(curWayPoint == 31)
   {
-    DriveToCornerRight(10); // Find corner of Pioneer and Van Brunt
+    GetToWallDistanceRight(200);
   }
   else if(curWayPoint == 32)
   {
@@ -1403,7 +1413,7 @@ void GoToPizzaShop()
   }
   else if(curWayPoint == 33)
   {
-    GoToPositionComplete(1.7); // Move into sideway
+    DriveToCornerRight(10); // Find corner of Pioneer and Van Brunt
   }
   else if(curWayPoint == 34)
   {
@@ -1411,19 +1421,19 @@ void GoToPizzaShop()
   }
   else if(curWayPoint == 35)
   {
-    TurnToAngleComplete(curSystemAngle+90); // Rotate Toward Marks
+    GoToPositionComplete(1.7); // Move into sideway
   }
   else if(curWayPoint == 36)
   {
-    GoToPositionComplete(2); // Go 2m toward the deli
+    IsButtonPressed();
   }
   else if(curWayPoint == 37)
   {
-    GetToWallDistanceRight(200);
+    TurnToAngleComplete(curSystemAngle+90); // Rotate Toward Marks
   }
   else if(curWayPoint == 38)
   {
-    GoToPositionComplete(10); // 12m from corner
+    GoToPositionComplete(2); // Go 2m toward the deli
   }
   else if(curWayPoint == 39)
   {
@@ -1431,9 +1441,33 @@ void GoToPizzaShop()
   }
   else if(curWayPoint == 40)
   {
-    GoToPositionComplete(4.6); // AT MARKS
+    GoToPositionComplete(3); // 5m from corner
   }
   else if(curWayPoint == 41)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 42)
+  {
+    GoToPositionComplete(3); // 8m from corner
+  }
+  else if(curWayPoint == 43)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 44)
+  {
+    GoToPositionComplete(5); //13m from corner
+  }
+  else if(curWayPoint == 45)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 46)
+  {
+    GoToPositionComplete(3.6); // 16.6m from corner .....   AT MARKS
+  }
+  else if(curWayPoint == 47)
   {
     TurnToAngleComplete(curSystemAngle+90); // Look into marks pizza
   }
@@ -1516,9 +1550,17 @@ void NavigatePioneer()
   }
 }
 
+boolean sent = true;
+
 void loop()
 {
   DoSerialCommands();
+
+  if(sent == false)
+  {
+    curWayPoint = 20;
+    sent = true;
+  }
 
   // EXECUTE YOUR PROGRAMS INSIDE OF HERE
   if(!ManualMode)
