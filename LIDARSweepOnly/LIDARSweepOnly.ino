@@ -1283,8 +1283,339 @@ void GoToPositionComplete(float meters)
     }
 }
 
+int maxWayPointPizza = 0;
+void PioneerWorksFromTrashCans()
+{
+  if(curWayPoint == maxWayPointPizza + 1)
+  {
+    TurnToAngleComplete(327);
+  }
+  else if(curWayPoint == maxWayPointPizza + 2)
+  {
+    AlignToWallOnLeft();
+  }
+  else if(curWayPoint == maxWayPointPizza + 3)
+  {
+    GetToWallDistanceLeft(250);
+  }
+  else if(curWayPoint == maxWayPointPizza + 4)
+  {
+    GoToPositionComplete(5); // 5m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 5)
+  {
+    GetToWallDistanceLeft(250);
+  }
+  else if(curWayPoint == maxWayPointPizza + 6)
+  {
+    GoToPositionComplete(5); // 10m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 7)
+  {
+    GetToWallDistanceLeft(250); 
+  }
+  else if(curWayPoint == maxWayPointPizza + 8)
+  {
+    GoToPositionComplete(5); //15m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 9)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 10)
+  {
+    GoToPositionComplete(5); // 20m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 11)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 12)
+  {
+    GoToPositionComplete(5); // 25 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 13)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 14)
+  {
+    GoToPositionComplete(5); // 30 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 15)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 16)
+  {
+    GoToPositionComplete(5); // 35 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 17)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 18)
+  {
+    GoToPositionComplete(5); // 40 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 19)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 20)
+  {
+    GoToPositionComplete(5); // 45 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 21)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 22)
+  {
+    GoToPositionComplete(5); // 50 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 23)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 24)
+  {
+    GoToPositionComplete(5); // 55 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 25)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 26)
+  {
+    GoToPositionComplete(5); // 60 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 27)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 28)
+  {
+    GoToPositionComplete(5); // 65 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 29)
+  {
+    TurnToAngleComplete(curSystemAngle - 90); // Turn toward pioneer works
+  }
+  else if(curWayPoint == maxWayPointPizza + 30)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == maxWayPointPizza + 31)
+  {
+    GoToPositionComplete(4); // Drive into pioneer works
+  }
+}
+
+void PioneerWorksFromPizzaShop()
+{
+  if(curWayPoint == maxWayPointPizza + 1)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == maxWayPointPizza + 2)
+  {
+    TurnToAngleComplete(curSystemAngle + 90);
+  }
+  else if(curWayPoint == maxWayPointPizza + 3)
+  {
+    GoToPositionComplete(5); // 5m
+  }
+  else if(curWayPoint == maxWayPointPizza + 4)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 5)
+  {
+    GoToPositionComplete(5); // 10m
+  }
+  else if(curWayPoint == maxWayPointPizza + 6)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 7)
+  {
+    GoToPositionComplete(4); // 14m
+  }
+  else if(curWayPoint == maxWayPointPizza + 8)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 9)
+  {
+    DriveToCornerLeft(5); // Find Corner
+  }
+  else if(curWayPoint == maxWayPointPizza + 10)
+  {
+    GoToPositionComplete(2);
+  }
+  else if(curWayPoint == maxWayPointPizza + 11)
+  {
+    TurnToAngleComplete(curSystemAngle - 90);
+  }
+  else if(curWayPoint == maxWayPointPizza + 12)
+  {
+    GoToPositionComplete(2); // 2m into journey
+  }
+  else if(curWayPoint == maxWayPointPizza + 13)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 14) 
+  {
+    GoToPositionComplete(5); // 7m into Journey
+  }
+  else if(curWayPoint == maxWayPointPizza + 15)
+  {
+    GetToWallDistanceLeft(250);
+  }
+  else if(curWayPoint == maxWayPointPizza + 16)
+  {
+    DriveToCornerLeft(5); // Find Trash Cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 17)
+  {
+    GoToPositionComplete(1); // 1m into trashcan
+  }
+  else if(curWayPoint == maxWayPointPizza + 18)
+  {
+    GetToWallDistanceLeft(125);
+  }
+  else if(curWayPoint == maxWayPointPizza + 19)
+  {
+    GoToPositionComplete(3); // 4m into trashcan
+  }
+  else if(curWayPoint == maxWayPointPizza + 20)
+  {
+    GetToWallDistanceLeft(125);
+  }
+  else if(curWayPoint == maxWayPointPizza + 21)
+  {
+    DriveToCornerLeft(5); // Find end of trashcans.... 67.55 to go
+  }
+  else if(curWayPoint == maxWayPointPizza + 22)
+  {
+    GoToPositionComplete(5); // 5m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 23)
+  {
+    GetToWallDistanceLeft(250);
+  }
+  else if(curWayPoint == maxWayPointPizza + 24)
+  {
+    GoToPositionComplete(5); // 10m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 25)
+  {
+    GetToWallDistanceLeft(250); 
+  }
+  else if(curWayPoint == maxWayPointPizza + 26)
+  {
+    GoToPositionComplete(5); //15m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 27)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 28)
+  {
+    GoToPositionComplete(5); // 20m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 29)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 30)
+  {
+    GoToPositionComplete(5); // 25 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 31)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 32)
+  {
+    GoToPositionComplete(5); // 30 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 33)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 34)
+  {
+    GoToPositionComplete(5); // 35 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 35)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 36)
+  {
+    GoToPositionComplete(5); // 40 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 37)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 38)
+  {
+    GoToPositionComplete(5); // 45 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 39)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 40)
+  {
+    GoToPositionComplete(5); // 50 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 41)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 43)
+  {
+    GoToPositionComplete(5); // 55 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 44)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 45)
+  {
+    GoToPositionComplete(5); // 60 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 46)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 47)
+  {
+    GoToPositionComplete(5); // 65 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 48)
+  {
+    TurnToAngleComplete(curSystemAngle - 90); // Turn toward pioneer works
+  }
+  else if(curWayPoint == maxWayPointPizza + 49)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == maxWayPointPizza + 50)
+  {
+    GoToPositionComplete(4); // Drive into pioneer works
+  }
+}
+
 void PizzaFromTrashCans()
 {
+  maxWayPointPizza = 19;
+
   if(curWayPoint == 1)
   {
     TurnToAngleComplete(60);
@@ -1366,6 +1697,8 @@ void PizzaFromTrashCans()
 
 void GoToPizzaShop()
 {
+  maxWayPointPizza = 47;
+
   if(curWayPoint == 1) // Wait for Button Press
   {
     IsButtonPressed();
@@ -1658,6 +1991,7 @@ void loop()
     //TestWallMotion();
     //NavigatePioneer();
     GoToPizzaShop();
+    PioneerWorksFromPizzaShop();
   }
 
   
