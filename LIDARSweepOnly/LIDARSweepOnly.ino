@@ -27,6 +27,7 @@
 
 #define MOTORCOMMPORT Serial1
 #define BTN_PIN   6
+#define LED_PIN   17
 
 #define REAL double
 #define MAX_READS 600
@@ -180,7 +181,9 @@ void setup()
   pinMode(dirPin, OUTPUT);
   pinMode(stepPin, OUTPUT);
   pinMode(BTN_PIN, INPUT);
+  pinMode(LED_PIN, OUTPUT);
   digitalWrite(BTN_PIN, HIGH);
+  digitalWrite(LED_PIN, LOW);
   
   digitalWrite(dirPin, 0);
   digitalWrite(stepPin, 0);
@@ -605,11 +608,22 @@ void IsButtonPressed()
   FLUSHMOTORBUFFER();
   waitingForButton = true;
   buttonPressed = false;
+  digitalWrite(LED_PIN, HIGH);
 
   if(digitalRead(BTN_PIN) == 0)
   {
     buttonPressed = true;
-    delay(50); // Debounce in the hacky way!
+
+    for(int i = 0; i < 5; i++)
+    {
+      digitalWrite(LED_PIN, LOW);
+      delay(200); 
+      digitalWrite(LED_PIN, HIGH);
+      delay(200);
+    }
+
+    FLUSHMOTORBUFFER();
+    digitalWrite(LED_PIN, LOW);
   }
 }
 
@@ -1315,29 +1329,41 @@ void TestWallMotion()
 {
   if(curWayPoint == 1)
   {
-    TurnToAngleComplete(238);
+    IsButtonPressed();
   }
   else if(curWayPoint == 2)
   {
-    GetToWallDistanceRight(200);
+    TurnToAngleComplete(238);
   }
   else if(curWayPoint == 3)
   {
-    TurnToAngleComplete(curSystemAngle - 180);
+    GetToWallDistanceRight(200);
   }
   else if(curWayPoint == 4)
   {
-    GetToWallDistanceLeft(500);
+    IsButtonPressed();
   }
   else if(curWayPoint == 5)
   {
-    GetToWallDistanceLeft(300);
+    TurnToAngleComplete(curSystemAngle - 180);
   }
   else if(curWayPoint == 6)
   {
-    TurnToAngleComplete(curSystemAngle + 180);
+    GetToWallDistanceLeft(500);
   }
   else if(curWayPoint == 7)
+  {
+    GetToWallDistanceLeft(300);
+  }
+  else if(curWayPoint == 8)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 9)
+  {
+    TurnToAngleComplete(curSystemAngle + 180);
+  }
+  else if(curWayPoint == 10)
   {
     GetToWallDistanceRight(600);
   }
@@ -1348,14 +1374,15 @@ void loop()
   DoSerialCommands();
 
   // EXECUTE YOUR PROGRAMS INSIDE OF HERE
-  // if(!ManualMode)
-  // {
-  //   //DoWallFindingSquares();
-  //   //DriveToCornerTest();
-  //   DoSquares();
-  // }
+  if(!ManualMode)
+  {
+    //DoWallFindingSquares();
+    //DriveToCornerTest();
+    //DoSquares();
+    TestWallMotion();
+  }
 
-  TestWallMotion();
+  
   
   // if(curWayPoint == 0)
   // {
@@ -1558,7 +1585,7 @@ void loop()
   //   Serial.println("SWEEP ERROR");
   // }
 
-  if(!sweeping && curWayPoint > 0)
+  if(!sweeping && !waitingForButton && curWayPoint > 0)
   {
     StepAndRead();
   }
