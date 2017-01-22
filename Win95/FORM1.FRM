@@ -2,15 +2,15 @@ VERSION 4.00
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   8205
-   ClientLeft      =   1455
-   ClientTop       =   2280
+   ClientLeft      =   1170
+   ClientTop       =   1770
    ClientWidth     =   11880
    Height          =   8610
-   Left            =   1395
+   Left            =   1110
    LinkTopic       =   "Form1"
    ScaleHeight     =   8205
    ScaleWidth      =   11880
-   Top             =   1935
+   Top             =   1425
    Width           =   12000
    Begin VB.Timer Timer1 
       Interval        =   120
@@ -34,6 +34,54 @@ Begin VB.Form Form1
       TabIndex        =   0
       Top             =   0
       Width           =   1095
+   End
+   Begin VB.Label CursorY 
+      Caption         =   ":"
+      Height          =   255
+      Left            =   5640
+      TabIndex        =   5
+      Top             =   0
+      Width           =   1335
+   End
+   Begin VB.Label CursorX 
+      Caption         =   ":"
+      Height          =   255
+      Left            =   4200
+      TabIndex        =   4
+      Top             =   0
+      Width           =   1335
+   End
+   Begin VB.Label Buffer 
+      Caption         =   ":"
+      Height          =   255
+      Left            =   7080
+      TabIndex        =   3
+      Top             =   0
+      Width           =   3735
+   End
+   Begin MSCommLib.MSComm MSComm1 
+      Left            =   2760
+      Top             =   0
+      _Version        =   65536
+      _ExtentX        =   847
+      _ExtentY        =   847
+      _StockProps     =   0
+      CDTimeout       =   0
+      CommPort        =   1
+      CTSTimeout      =   0
+      DSRTimeout      =   0
+      DTREnable       =   -1  'True
+      Handshaking     =   0
+      InBufferSize    =   1024
+      InputLen        =   0
+      Interval        =   1000
+      NullDiscard     =   0   'False
+      OutBufferSize   =   512
+      ParityReplace   =   "?"
+      RThreshold      =   0
+      RTSEnable       =   0   'False
+      Settings        =   "9600,n,8,1"
+      SThreshold      =   0
    End
    Begin VB.Label Label1 
       Caption         =   "Count "
@@ -94,7 +142,7 @@ Private Declare Function ReadFile Lib _
 lpBuffer As Any, _
 ByVal nNumberOfBytesToRead As Long, _
 lpNumberOfBytesRead As Long, _
-ByVal lpOverlapped As Long) As Long
+ByVal lpOverlapped As Any) As Long
 
 Private Declare Sub Sleep Lib _
 "kernel32" _
@@ -105,30 +153,72 @@ Lib "kernel32" () As Long
 
 
 Private Sub Command1_Click()
-  Dim hSerial As Long
-  Dim buffer(1 To 16) As Byte
-  Dim totalBytes As Long
-  Dim ret As Long
-  Dim Text As String
-  Dim of As OFSTRUCT
-  ' Dim sec As SECURITY_ATTRIBUTES
-  ' sec.nLength = 0
-  ' hSerial = CreateFile("c:\hello.txt", GENERIC_READ, FILE_SHARE_READ, sec, OPEN_EXISTING, 0, 0)
-  hSerial = OpenFile("c:\hello.txt", of, OF_EXIST Or OF_READ)
-  If hSerial = -1 Then
-    ret = Err.LastDllError()
-  End If
-  ' Sleep (2000)
-  ret = ReadFile(hSerial, buffer(1), 16, totalBytes, 0&)
-  Text = StrConv(buffer, vbUnicode)
-  Debug.Print "'" & Text & "'"
-  MsgBox ("got")
-  MsgBox (Text)
+  MSComm1.CommPort = 1
+  MSComm1.Settings = "9600,N,8,1"
+  MSComm1.RThreshold = 24
+  MSComm1.InputLen = 1
+  MSComm1.PortOpen = True
+
+
+
+'
+'  Dim hSerial As Long
+'  Dim buffer(1 To 16) As Byte
+'  Dim totalBytes As Long
+'  Dim ret As Integer
+'  Dim Text As String
+'  Dim of As OFSTRUCT
+'  ' Dim sec As SECURITY_ATTRIBUTES
+'  ' sec.nLength = 0
+'  ' hSerial = CreateFile("c:\hello.txt", GENERIC_READ, FILE_SHARE_READ, sec, OPEN_EXISTING, 0, 0)
+'  hSerial = OpenFile("COM1", of, OF_EXIST Or OF_READ)
+'  If hSerial = -1 Then
+'    ret = Err.LastDllError()
+'  End If
+'  ' Sleep (2000)
+'  ret = ReadFile(hSerial, buffer(1), 16, totalBytes, 0&)
+'  Text = StrConv(buffer, vbUnicode)
+'  Debug.Print "'" & Text & "'"
+'  MsgBox ("got")
+'  MsgBox (Text)
   
   
   ' MsgBox (buffer)
   
 End Sub
+
+Private Sub MSComm1_OnComm()
+  Dim ch As String
+  Dim sofar As String
+  Dim first As Integer
+  Dim X As Integer
+  Dim Y As Integer
+  ch = ""
+  sofar = buffer.Caption
+  With MSComm1
+    Select Case .CommEvent
+      Case comEvReceive
+        ch = .Input
+        If Asc(ch) = 10 Then
+          ' Flush the data
+          If Mid(buffer, 1, 1) = ":" Then
+            ' do nothing
+          Else
+            first = InStr(1, buffer.Caption, ",")
+            X = Val(Mid(buffer.Caption, 1, first - 1))
+            Y = Val(Mid(buffer.Caption, first + 1))
+            CursorX.Caption = X
+            CursorY.Caption = Y
+          End If
+          buffer.Caption = ""
+        Else
+          sofar = sofar & ch
+          buffer.Caption = sofar
+        End If
+    End Select
+  End With
+End Sub
+
 
 Private Sub Timer1_Timer()
   Static Count As Integer
@@ -136,29 +226,29 @@ Private Sub Timer1_Timer()
   Dim Part As String
   Dim Part2 As String
   Dim Num As Integer
+  Dim X As Integer
+  Dim Y As Integer
   ' Count up each frame.
   Count = Count + 1
-  Label1.Caption = Count
+  'Label1.Caption = Count
   
   ' Flash a hello message.
-  If Count Mod 10 > 7 Then
-    Picture1.Picture = LoadPicture("c:\code\fundroid\hello.bmp")
-  Else
+  'If Count Mod 10 > 7 Then
+  '  Picture1.Picture = LoadPicture("c:\code\fundroid\hello.bmp")
+  'Else
   
-    ' Simulate parsing messages from the Arduino.
-    ' See "Command1" for how to read a port.
-    Text = "123:456"
-    Part = Mid(Text, 1, 3)
-    Part2 = Mid(Text, 5, 3)
-    Num = Val(Part) + Val(Part2)
- 
-    ' Load the map image.
-    Picture1.Picture = LoadPicture("c:\code\fundroid\map.bmp")
-    ' Draw a large circle on it.
-    Picture1.FillColor = vbBlack
-    Picture1.FillStyle = vbSolid
-    Picture1.Circle (Count * 100 + 200, Count * 100 + 400), 600, vbBlack
-    
-  End If
+    If CursorX.Caption = ":" Then
+    ' pass
+    Else
+      X = Val(CursorX.Caption)
+      Y = Val(CursorY.Caption)
+      ' Load the map image.
+      Picture1.Picture = LoadPicture("c:\code\fundroid\map.bmp")
+      ' Draw a large circle on it.
+      Picture1.FillColor = vbRed
+      Picture1.FillStyle = vbSolid
+      Picture1.Circle (X * 20, Y * 20), 60, vbRed
+    End If
+  'End If
 End Sub
 
