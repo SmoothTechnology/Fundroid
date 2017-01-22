@@ -1273,54 +1273,169 @@ void GoToPositionComplete(float meters)
 
 void GoToPizzaShop()
 {
-  if(!ManualMode)
+  if(curWayPoint == 1) // Wait for Button Press
   {
-    if(curWayPoint == 1) // Wait for Button Press
-    {
-      IsButtonPressed();
-    }
-    else if(curWayPoint == 2) // Turn toward Pioneer Works door
-    {
-      TurnToAngleComplete(68);
-    }
-    else if(curWayPoint == 3) // Leave through pioneer works garage - 4m
-    {
-      GoToPositionComplete(4);
-    }
-    else if(curWayPoint == 4) // Turn to look up
-    {
-      TurnToAngleComplete(curSystemAngle + 90);
-    }
-    else if(curWayPoint == 5) // Wait for button press after garage door lowered
-    {
-      IsButtonPressed();
-    }
-    else if(curWayPoint == 6) // Align to the garage door on right
-    {
-      AlignToWallOnRight();
-    }
-    else if(curWayPoint == 7) // Start to drive
-    {
-      GoToPositionComplete(5);
-    }
-    else if(curWayPoint == 8) // Align
-    {
-      AlignToWallOnRight();
-    }
-
-
-    else if(curWayPoint == 20) // Find The Corner
-    {
-      DriveToCornerRight(3);
-    }
-    else if(curWayPoint == 21) // Drive past Corner 
-    {
-      GoToPositionComplete(2);
-    }
-    else if(curWayPoint == 22) // Turn down Pioneer St
-    {
-      TurnToAngleComplete(curSystemAngle + 90);
-    }
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 2) // Turn toward Pioneer Works door
+  {
+    TurnToAngleComplete(60);
+  }
+  else if(curWayPoint == 3) // Leave through pioneer works garage - 4m
+  {
+    GoToPositionComplete(4);
+  }
+  else if(curWayPoint == 4) // Turn to look up Pioneer St
+  {
+    TurnToAngleComplete(curSystemAngle + 90);
+  }
+  else if(curWayPoint == 5) // Clear the garage door
+  {
+    GoToPositionComplete(3); // 3m into journey
+  }
+  else if(curWayPoint == 6) // Wait for button press after garage door lowered
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 7) // Align to the wall on right
+  {
+    AlignToWallOnRight();
+  }
+  else if(curWayPoint == 8) // Get distance to wall
+  {
+    GetToWallDistanceRight(200)
+  }
+  else if(curWayPoint == 9) // start to move
+  {
+    GoToPositionComplete(10); // 13m into journey
+  }
+  else if(curWayPoint == 10)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 11)
+  {
+    GoToPositionComplete(10); // 23m into journey
+  }
+  else if(curWayPoint == 12)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 13)
+  {
+    GoToPositionComplete(10); // 33m
+  }
+  else if(curWayPoint == 14)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 15)
+  {
+    GoToPositionComplete(10); // 43m
+  }
+  else if(curWayPoint == 16)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 17)
+  {
+    GoToPositionComplete(10); // 53m
+  }
+  else if(curWayPoint == 18)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 19) // MOVE DIFFERENTLY BECAUSE OF LUMP
+  {
+    GoToPositionComplete(5); // 58m
+  }
+  else if(curWayPoint == 20)
+  {
+    GetToWallDistanceRight(250);
+  }
+  else if(curWayPoint == 21)
+  {
+    GoToPositionComplete(6); // 64m
+  }
+  else if(curWayPoint == 22)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 23)
+  {
+    DriveToCornerRight(5); // This will end once hitting the wood stuff.. 15.5m from corner to Marks
+  }
+  else if(curWayPoint == 24)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 25)
+  {
+    GoToPositionComplete(1); // 1m into trash cans
+  }
+  else if(curWayPoint == 26)
+  {
+    GetToWallDistanceRight(125);
+  }
+  else if(curWayPoint == 27)
+  {
+    DriveToCornerRight(8); // Find end of trash cans
+  }
+  else if(curWayPoint == 28)
+  {
+    GoToPositionComplete(1);
+  }
+  else if(curWayPoint == 29)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 30)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 31)
+  {
+    DriveToCornerRight(10); // Find corner of Pioneer and Van Brunt
+  }
+  else if(curWayPoint == 32)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 33)
+  {
+    GoToPositionComplete(1.7); // Move into sideway
+  }
+  else if(curWayPoint == 34)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 35)
+  {
+    TurnToAngleComplete(curSystemAngle+90); // Rotate Toward Marks
+  }
+  else if(curWayPoint == 36)
+  {
+    GoToPositionComplete(2); // Go 2m toward the deli
+  }
+  else if(curWayPoint == 37)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 38)
+  {
+    GoToPositionComplete(10); // 12m from corner
+  }
+  else if(curWayPoint == 39)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 40)
+  {
+    GoToPositionComplete(4.6); // AT MARKS
+  }
+  else if(curWayPoint == 41)
+  {
+    TurnToAngleComplete(curSystemAngle+90); // Look into marks pizza
   }
   
 }
@@ -1369,6 +1484,38 @@ void TestWallMotion()
   }
 }
 
+void NavigatePioneer()
+{
+  if(curWayPoint == 1)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 2)
+  {
+    TurnToAngleComplete(60);
+  }
+  else if(curWayPoint == 3)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 4)
+  {
+    AlignToWallOnRight();
+  }
+  else if(curWayPoint == 5)
+  {
+    GoToPositionComplete(5);
+  }
+  else if(curWayPoint == 6)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 7)
+  {
+    GoToPositionComplete(5);
+  }
+}
+
 void loop()
 {
   DoSerialCommands();
@@ -1379,7 +1526,9 @@ void loop()
     //DoWallFindingSquares();
     //DriveToCornerTest();
     //DoSquares();
-    TestWallMotion();
+    //TestWallMotion();
+    //NavigatePioneer();
+    GoToPizzaShop();
   }
 
   
