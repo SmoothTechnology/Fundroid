@@ -929,7 +929,10 @@ void GetToWallDistanceRight(int wantedDistance)
   
   MoveMotorToAngle(MoveAngle);
   FLUSHMOTORBUFFER();
-  while(!CheckForMotionComplete()) {};
+  while(!CheckForMotionComplete()) 
+  {
+    StepAndRead();
+  }
 
   double distDiffF = abs(distDiff);
   distDiffF = distDiffF / 100;
@@ -938,7 +941,10 @@ void GetToWallDistanceRight(int wantedDistance)
 
   MoveMotorForward(distDiffF);
   FLUSHMOTORBUFFER();
-  while(!CheckForMotionComplete()) {};
+  while(!CheckForMotionComplete()) 
+  {
+    StepAndRead();
+  }
 
   if(distDiff < 0)
   {
@@ -956,7 +962,98 @@ void GetToWallDistanceRight(int wantedDistance)
 
   MoveMotorToAngle(MoveAngle);
   FLUSHMOTORBUFFER();
-  while(!CheckForMotionComplete()) {};
+  while(!CheckForMotionComplete()) 
+  {
+    StepAndRead();
+  }
+
+  AlgorithmComplete = true;
+  
+}
+
+void GetToWallDistanceLeft(int wantedDistance)
+{
+  Initialize();
+  DoingAlgorithm = true;
+  AlgorithmComplete = false;
+  int stepperAngleToLeft = 220;
+  int distanceMarginOfError = 10;
+  boolean wallFound = false;
+
+  Serial.println("Go To Wall Distance Left");
+
+  // Read Wall
+  StepToSpecificPosition(stepperAngleToLeft);
+  int dist = myLidarLite.distance();
+
+  // Calculate difference in distance
+  int distDiff = wantedDistance - dist;
+
+  if(abs(distDiff) < distanceMarginOfError)
+  {
+    AlgorithmComplete = true;
+    return;
+  }
+
+  Serial.print("ReadDist: ");
+  Serial.print(dist);
+  Serial.print(" DistDiff");
+  Serial.println(distDiff);
+
+  // Move to position in Right Angles 
+  int MoveAngle = 0;
+  if(distDiff > 0)
+  {
+    MoveAngle = curSystemAngle + 90;
+    if(MoveAngle > 360)
+      MoveAngle = MoveAngle - 360;
+  }
+  else
+  {
+    MoveAngle = curSystemAngle - 90;
+    if(MoveAngle < 0)
+      MoveAngle = MoveAngle + 360;
+  }
+  
+  MoveMotorToAngle(MoveAngle);
+  FLUSHMOTORBUFFER();
+  while(!CheckForMotionComplete()) 
+  {
+    StepAndRead();
+  }
+
+  double distDiffF = abs(distDiff);
+  distDiffF = distDiffF / 100;
+
+  Serial.println(distDiffF);
+
+  MoveMotorForward(distDiffF);
+  FLUSHMOTORBUFFER();
+  while(!CheckForMotionComplete()) 
+  {
+    StepAndRead();
+  } 
+
+  if(distDiff > 0)
+  {
+    MoveAngle = curSystemAngle - 90;
+    if(MoveAngle < 0)
+      MoveAngle = MoveAngle + 360;
+  }
+  else
+  {
+    MoveAngle = curSystemAngle + 90;
+    if(MoveAngle > 360)
+      MoveAngle = MoveAngle - 360;
+  }
+  
+
+  MoveMotorToAngle(MoveAngle);
+  FLUSHMOTORBUFFER();
+  while(!CheckForMotionComplete()) 
+  {
+    StepAndRead();
+  }
 
   AlgorithmComplete = true;
   
@@ -1137,6 +1234,11 @@ void TurnToAngleComplete(int angle)
 {
   if(!DataSent && !ManualMode)
   {
+    if(angle > 360)
+      angle = angle - 360;
+    else if(angle < 0)
+      angle = angle + 360;
+
     FLUSHMOTORBUFFER();
     MoveMotorToAngle(angle);
     DataSent = true;
@@ -1209,6 +1311,37 @@ void GoToPizzaShop()
   
 }
 
+void TestWallMotion()
+{
+  if(curWayPoint == 1)
+  {
+    TurnToAngleComplete(238);
+  }
+  else if(curWayPoint == 2)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 3)
+  {
+    TurnToAngleComplete(curSystemAngle - 180);
+  }
+  else if(curWayPoint == 4)
+  {
+    GetToWallDistanceLeft(500);
+  }
+  else if(curWayPoint == 5)
+  {
+    GetToWallDistanceLeft(300);
+  }
+  else if(curWayPoint == 6)
+  {
+    TurnToAngleComplete(curSystemAngle + 180);
+  }
+  else if(curWayPoint == 7)
+  {
+    GetToWallDistanceRight(600);
+  }
+}
 
 void loop()
 {
@@ -1222,14 +1355,7 @@ void loop()
   //   DoSquares();
   // }
 
-  if(curWayPoint == 1)
-  {
-    TurnToAngleComplete(238);
-  }
-  else if(curWayPoint == 2)
-  {
-    GetToWallDistanceRight(300);
-  }
+  TestWallMotion();
   
   // if(curWayPoint == 0)
   // {
