@@ -153,11 +153,11 @@ Lib "kernel32" () As Long
 
 
 Private Sub Command1_Click()
-  MSComm1.CommPort = 1
-  MSComm1.Settings = "9600,N,8,1"
-  MSComm1.RThreshold = 24
-  MSComm1.InputLen = 1
-  MSComm1.PortOpen = True
+'  MSComm1.CommPort = 1
+'  MSComm1.Settings = "9600,N,8,1"
+'  MSComm1.RThreshold = 1
+'  MSComm1.InputBufferSize = 8
+'  MSComm1.PortOpen = True
 
 
 
@@ -187,33 +187,40 @@ Private Sub Command1_Click()
   
 End Sub
 
+Private Sub Form_Load()
+  MSComm1.CommPort = 1
+  MSComm1.Settings = "9600,N,8,1"
+  MSComm1.RThreshold = 1
+  MSComm1.InBufferSize = 1024
+  MSComm1.InputLen = 128
+  MSComm1.PortOpen = True
+End Sub
+
 Private Sub MSComm1_OnComm()
-  Dim ch As String
+  Dim read As String
   Dim sofar As String
   Dim first As Integer
   Dim X As Integer
   Dim Y As Integer
-  ch = ""
+  Dim ending As Integer
+  read = ""
   sofar = buffer.Caption
   With MSComm1
     Select Case .CommEvent
       Case comEvReceive
-        ch = .Input
-        If Asc(ch) = 10 Then
-          ' Flush the data
-          If Mid(buffer, 1, 1) = ":" Then
-            ' do nothing
-          Else
-            first = InStr(1, buffer.Caption, ",")
-            X = Val(Mid(buffer.Caption, 1, first - 1))
-            Y = Val(Mid(buffer.Caption, first + 1))
-            CursorX.Caption = X
-            CursorY.Caption = Y
+        read = .Input
+        buffer.Caption = buffer.Caption & read
+        ending = InStr(1, buffer.Caption, Chr(10))
+        If ending > 0 Then
+          first = InStr(1, buffer.Caption, ",")
+          If first > 0 Then
+              X = Val(Mid(buffer.Caption, 1, first - 1))
+              Y = Val(Mid(buffer.Caption, first + 1, ending - 1))
+              CursorX.Caption = X
+              CursorY.Caption = Y
           End If
           buffer.Caption = ""
-        Else
-          sofar = sofar & ch
-          buffer.Caption = sofar
+          MSComm1.InBufferCount = 0
         End If
     End Select
   End With
@@ -228,6 +235,8 @@ Private Sub Timer1_Timer()
   Dim Num As Integer
   Dim X As Integer
   Dim Y As Integer
+  Dim twipScale As Integer
+  Dim circleRadius As Integer
   ' Count up each frame.
   Count = Count + 1
   'Label1.Caption = Count
@@ -237,6 +246,8 @@ Private Sub Timer1_Timer()
   '  Picture1.Picture = LoadPicture("c:\code\fundroid\hello.bmp")
   'Else
   
+    twipScale = 15
+    circleRadius = 200
     If CursorX.Caption = ":" Then
     ' pass
     Else
@@ -247,7 +258,7 @@ Private Sub Timer1_Timer()
       ' Draw a large circle on it.
       Picture1.FillColor = vbRed
       Picture1.FillStyle = vbSolid
-      Picture1.Circle (X * 20, Y * 20), 60, vbRed
+      Picture1.Circle (X * twipScale, Y * twipScale), circleRadius, vbRed
     End If
   'End If
 End Sub
