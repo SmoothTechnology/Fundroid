@@ -857,6 +857,8 @@ void DriveToCornerRight(int distance)
     delay(50);
   }while(!wallFound);
 
+  FLUSHMOTORBUFFER();
+
   AlgorithmComplete = true;
 }
 
@@ -899,6 +901,8 @@ void DriveToCornerLeft(int distance)
 
     delay(50);
   }while(!wallFound);
+
+  FLUSHMOTORBUFFER();
 
   AlgorithmComplete = true;
 }
@@ -1261,6 +1265,7 @@ void TurnToAngleComplete(int angle)
 
     FLUSHMOTORBUFFER();
     MoveMotorToAngle(angle);
+    FLUSHMOTORBUFFER();
     DataSent = true;
     sweeping = false;
   }
@@ -1272,9 +1277,91 @@ void GoToPositionComplete(float meters)
     {
       FLUSHMOTORBUFFER();
       MoveMotorForward(meters);
+      FLUSHMOTORBUFFER();
       DataSent = true;
       sweeping = false;
     }
+}
+
+void PizzaFromTrashCans()
+{
+  if(curWayPoint == 1)
+  {
+    TurnToAngleComplete(60);
+  }
+  else if(curWayPoint == 2)
+  {
+    AlignToWallOnRight();
+  }
+  else if(curWayPoint == 3)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 4)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 5)
+  {
+    DriveToCornerRight(10); // Find corner of Pioneer and Van Brunt
+  }
+  else if(curWayPoint == 6)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 7)
+  {
+    GoToPositionComplete(1.7); // Move into sideway
+  }
+  else if(curWayPoint == 8)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 9)
+  {
+    TurnToAngleComplete(curSystemAngle+90); // Rotate Toward Marks
+  }
+  else if(curWayPoint == 10)
+  {
+    GoToPositionComplete(2); // Go 2m toward the deli
+  }
+  else if(curWayPoint == 11)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 12)
+  {
+    GoToPositionComplete(3); // 5m from corner
+  }
+  else if(curWayPoint == 13)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 14)
+  {
+    GoToPositionComplete(3); // 8m from corner
+  }
+  else if(curWayPoint == 15)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 16)
+  {
+    GoToPositionComplete(5); //13m from corner
+  }
+  else if(curWayPoint == 17)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 18)
+  {
+    GoToPositionComplete(3.6); // 16.6m from corner .....   AT MARKS
+  }
+  else if(curWayPoint == 19)
+  {
+    TurnToAngleComplete(curSystemAngle+90); // Look into marks pizza
+  }
+
 }
 
 void GoToPizzaShop()
