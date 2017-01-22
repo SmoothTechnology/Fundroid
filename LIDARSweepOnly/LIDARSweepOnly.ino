@@ -26,6 +26,8 @@
 #include <math.h>
 
 #define MOTORCOMMPORT Serial1
+#define BTN_PIN   6
+#define LED_PIN   17
 
 #define REAL double
 #define MAX_READS 600
@@ -178,6 +180,10 @@ void setup()
 
   pinMode(dirPin, OUTPUT);
   pinMode(stepPin, OUTPUT);
+  pinMode(BTN_PIN, INPUT);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(BTN_PIN, HIGH);
+  digitalWrite(LED_PIN, LOW);
   
   digitalWrite(dirPin, 0);
   digitalWrite(stepPin, 0);
@@ -597,6 +603,30 @@ void DoSerialCommands()
   }
 }
 
+void IsButtonPressed()
+{
+  FLUSHMOTORBUFFER();
+  waitingForButton = true;
+  buttonPressed = false;
+  digitalWrite(LED_PIN, HIGH);
+
+  if(digitalRead(BTN_PIN) == 0)
+  {
+    buttonPressed = true;
+
+    for(int i = 0; i < 5; i++)
+    {
+      digitalWrite(LED_PIN, LOW);
+      delay(200); 
+      digitalWrite(LED_PIN, HIGH);
+      delay(200);
+    }
+
+    FLUSHMOTORBUFFER();
+    digitalWrite(LED_PIN, LOW);
+  }
+}
+
 /////////////////////////////////////////////////////////////////
 ///////////////// CONSTANT RUN TIME OBSTACLE AVOIDANCE //////////
 long maxStep = 220;
@@ -639,15 +669,29 @@ void StepAndRead()
     Serial.print(" Reading: ");
     Serial.println(curRead.reading);
 
-    if(distance < 100)
+    int numValidReadings = 0;
+
+    while(distance < 40 && distance >= 2)
     {
-      StopMotor();
+      numValidReadings++;
+
+      distance = myLidarLite.distance();
+
+      if(numValidReadings > 3) // 4 Valid readings needed to stop
+      {
+        StopMotor();
+        ManualMode = true;
+
+        while(distance < 40 || distance <= 2)
+        {
+          distance = myLidarLite.distance();
+        }
+
+        return;
+      }
     }
 
-    while(distance < 100 || distance <= 2)
-    {
-      distance = myLidarLite.distance();
-    }
+
   }
 
 }
@@ -794,6 +838,8 @@ void DriveToCornerRight(int distance)
   do
   {
     int curDistance = myLidarLite.distance();
+    Serial.print("Distance: ");
+    Serial.println(curDistance);
 
     while(curDistance <= 2)
     {
@@ -803,10 +849,15 @@ void DriveToCornerRight(int distance)
     if(abs(curDistance - lastDistance) > allowableSlope)
     {
       StopMotor();
+      wallFound = true;
     }
 
     lastDistance = curDistance;
+
+    delay(50);
   }while(!wallFound);
+
+  FLUSHMOTORBUFFER();
 
   AlgorithmComplete = true;
 }
@@ -847,150 +898,336 @@ void DriveToCornerLeft(int distance)
     }
 
     lastDistance = curDistance;
+
+    delay(50);
   }while(!wallFound);
 
+  FLUSHMOTORBUFFER();
+
   AlgorithmComplete = true;
+}
+
+void GetToWallDistanceRight(int wantedDistance)
+{
+  Initialize();
+  DoingAlgorithm = true;
+  AlgorithmComplete = false;
+  int stepperAngleToRight = 20;
+  int distanceMarginOfError = 10;
+  boolean wallFound = false;
+
+  Serial.println("Go To Wall Distance Right");
+
+  // Read Wall
+  StepToSpecificPosition(stepperAngleToRight);
+  int dist = myLidarLite.distance();
+
+  // Calculate difference in distance
+  int distDiff = wantedDistance - dist;
+
+  if(abs(distDiff) < distanceMarginOfError)
+  {
+    AlgorithmComplete = true;
+    return;
+  }
+
+  Serial.print("ReadDist: ");
+  Serial.print(dist);
+  Serial.print(" DistDiff");
+  Serial.println(distDiff);
+
+  // Move to position in Right Angles 
+  int MoveAngle = 0;
+  if(distDiff < 0)
+  {
+    MoveAngle = curSystemAngle + 90;
+    if(MoveAngle > 360)
+      MoveAngle = MoveAngle - 360;
+  }
+  else
+  {
+    MoveAngle = curSystemAngle - 90;
+    if(MoveAngle < 0)
+      MoveAngle = MoveAngle + 360;
+  }
+  
+  MoveMotorToAngle(MoveAngle);
+  FLUSHMOTORBUFFER();
+  while(!CheckForMotionComplete()) 
+  {
+    StepAndRead();
+  }
+
+  double distDiffF = abs(distDiff);
+  distDiffF = distDiffF / 100;
+
+  Serial.println(distDiffF);
+
+  MoveMotorForward(distDiffF);
+  FLUSHMOTORBUFFER();
+  while(!CheckForMotionComplete()) 
+  {
+    StepAndRead();
+  }
+
+  if(distDiff < 0)
+  {
+    MoveAngle = curSystemAngle - 90;
+    if(MoveAngle < 0)
+      MoveAngle = MoveAngle + 360;
+  }
+  else
+  {
+    MoveAngle = curSystemAngle + 90;
+    if(MoveAngle > 360)
+      MoveAngle = MoveAngle - 360;
+  }
+  
+
+  MoveMotorToAngle(MoveAngle);
+  FLUSHMOTORBUFFER();
+  while(!CheckForMotionComplete()) 
+  {
+    StepAndRead();
+  }
+
+  AlgorithmComplete = true;
+  
+}
+
+void GetToWallDistanceLeft(int wantedDistance)
+{
+  Initialize();
+  DoingAlgorithm = true;
+  AlgorithmComplete = false;
+  int stepperAngleToLeft = 220;
+  int distanceMarginOfError = 10;
+  boolean wallFound = false;
+
+  Serial.println("Go To Wall Distance Left");
+
+  // Read Wall
+  StepToSpecificPosition(stepperAngleToLeft);
+  int dist = myLidarLite.distance();
+
+  // Calculate difference in distance
+  int distDiff = wantedDistance - dist;
+
+  if(abs(distDiff) < distanceMarginOfError)
+  {
+    AlgorithmComplete = true;
+    return;
+  }
+
+  Serial.print("ReadDist: ");
+  Serial.print(dist);
+  Serial.print(" DistDiff");
+  Serial.println(distDiff);
+
+  // Move to position in Right Angles 
+  int MoveAngle = 0;
+  if(distDiff > 0)
+  {
+    MoveAngle = curSystemAngle + 90;
+    if(MoveAngle > 360)
+      MoveAngle = MoveAngle - 360;
+  }
+  else
+  {
+    MoveAngle = curSystemAngle - 90;
+    if(MoveAngle < 0)
+      MoveAngle = MoveAngle + 360;
+  }
+  
+  MoveMotorToAngle(MoveAngle);
+  FLUSHMOTORBUFFER();
+  while(!CheckForMotionComplete()) 
+  {
+    StepAndRead();
+  }
+
+  double distDiffF = abs(distDiff);
+  distDiffF = distDiffF / 100;
+
+  Serial.println(distDiffF);
+
+  MoveMotorForward(distDiffF);
+  FLUSHMOTORBUFFER();
+  while(!CheckForMotionComplete()) 
+  {
+    StepAndRead();
+  } 
+
+  if(distDiff > 0)
+  {
+    MoveAngle = curSystemAngle - 90;
+    if(MoveAngle < 0)
+      MoveAngle = MoveAngle + 360;
+  }
+  else
+  {
+    MoveAngle = curSystemAngle + 90;
+    if(MoveAngle > 360)
+      MoveAngle = MoveAngle - 360;
+  }
+  
+
+  MoveMotorToAngle(MoveAngle);
+  FLUSHMOTORBUFFER();
+  while(!CheckForMotionComplete()) 
+  {
+    StepAndRead();
+  }
+
+  AlgorithmComplete = true;
+  
 }
 
 /////////////////////// END ALGORITHMS //////////////////////////////
 ////////////////////////////////////////////////////////////////////
 void DoSquares()
 {
+  if(!ManualMode)
+  {
+    if(curWayPoint == 1)
+    {
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorToAngle(78);
+        DataSent = true;
+        sweeping = false;
+      }
+    }
+    else if(curWayPoint == 2)
+    {
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorForward(3);
+        DataSent = true;
+        sweeping = false;
+        FLUSHMOTORBUFFER();
+      }
+    }
+    else if(curWayPoint == 3)
+    {
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorToAngle(168);
+        DataSent = true;
+        sweeping = false;
+      }
+    }
+    else if(curWayPoint == 4)
+    {
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorForward(3);
+        DataSent=true;
+        sweeping = false;
+      }
+    }
+    else if(curWayPoint == 5)
+    {
+      //DoCorrectionAngle(0, 80, true);
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorToAngle(258);
+        DataSent = true;
+        sweeping = false;
+      }
+    }
+    else if(curWayPoint == 6)
+    {
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorForward(3);
+        DataSent = true;
+        sweeping = false;
+      }
+    }
+    else if(curWayPoint == 7)
+    {
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorToAngle(348);
+        DataSent = true;
+        sweeping = false;
+      }
+    }
+    else if(curWayPoint == 8)
+    {
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorForward(3);
+        DataSent = true;
+        sweeping = false;
+      }
+    }
 
-  if(curWayPoint == 1)
-  {
-    if(!DataSent && !ManualMode)
+    if(curWayPoint >= 8)
     {
-      FLUSHMOTORBUFFER();
-      MoveMotorToAngle(78);
-      DataSent = true;
-      sweeping = false;
+      curWayPoint = 1;
     }
   }
-  else if(curWayPoint == 2)
-  {
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorForward(3);
-      DataSent = true;
-      sweeping = false;
-      FLUSHMOTORBUFFER();
-    }
-  }
-  else if(curWayPoint == 3)
-  {
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorToAngle(168);
-      DataSent = true;
-      sweeping = false;
-    }
-  }
-  else if(curWayPoint == 4)
-  {
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorForward(3);
-      DataSent=true;
-      sweeping = false;
-    }
-  }
-  else if(curWayPoint == 5)
-  {
-    //DoCorrectionAngle(0, 80, true);
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorToAngle(258);
-      DataSent = true;
-      sweeping = false;
-    }
-  }
-  else if(curWayPoint == 6)
-  {
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorForward(3);
-      DataSent = true;
-      sweeping = false;
-    }
-  }
-  else if(curWayPoint == 7)
-  {
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorToAngle(348);
-      DataSent = true;
-      sweeping = false;
-    }
-  }
-  else if(curWayPoint == 8)
-  {
-    if(!DataSent && !ManualMode)
-    {
-      FLUSHMOTORBUFFER();
-      MoveMotorForward(3);
-      DataSent = true;
-      sweeping = false;
-    }
-  }
-
-  if(curWayPoint >= 8)
-  {
-    curWayPoint = 1;
-  }
+  
 
 }
 
 void DoWallFindingSquares()
 {
-  if(curWayPoint == 1)
+  if(!ManualMode)
   {
-    if(!DataSent && !ManualMode)
+    if(curWayPoint == 1)
     {
-      FLUSHMOTORBUFFER();
-      MoveMotorToAngle(78);
-      DataSent = true;
-      sweeping = false;
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorToAngle(78);
+        DataSent = true;
+        sweeping = false;
+      }
     }
-  }
-  if(curWayPoint == 2)
-  {
-    AlignToWallOnLeft();
-  }
-  if(curWayPoint == 3)
-  {
-    if(!DataSent && !ManualMode)
+    if(curWayPoint == 2)
     {
-      FLUSHMOTORBUFFER();
-      MoveMotorForward(4);
-      DataSent = true;
-      sweeping = false;
+      AlignToWallOnLeft();
     }
-  }
-  if(curWayPoint == 4)
-  {
-    if(!DataSent && !ManualMode)
+    if(curWayPoint == 3)
     {
-      FLUSHMOTORBUFFER();
-      MoveMotorToAngle(curSystemAngle+90);
-      DataSent = true;
-      sweeping = false;
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorForward(4);
+        DataSent = true;
+        sweeping = false;
+      }
     }
-  }
-  if(curWayPoint == 5)
-  {
-    if(!DataSent && !ManualMode)
+    if(curWayPoint == 4)
     {
-      FLUSHMOTORBUFFER();
-      MoveMotorForward(4);
-      DataSent = true;
-      sweeping = false;
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorToAngle(curSystemAngle+90);
+        DataSent = true;
+        sweeping = false;
+      }
+    }
+    if(curWayPoint == 5)
+    {
+      if(!DataSent && !ManualMode)
+      {
+        FLUSHMOTORBUFFER();
+        MoveMotorForward(4);
+        DataSent = true;
+        sweeping = false;
+      }
     }
   }
 }
@@ -1017,17 +1254,764 @@ void DriveToCornerTest()
   }
 }
 
+void TurnToAngleComplete(int angle)
+{
+  if(!DataSent && !ManualMode)
+  {
+    if(angle > 360)
+      angle = angle - 360;
+    else if(angle < 0)
+      angle = angle + 360;
+
+    FLUSHMOTORBUFFER();
+    MoveMotorToAngle(angle);
+    FLUSHMOTORBUFFER();
+    DataSent = true;
+    sweeping = false;
+  }
+}
+
+void GoToPositionComplete(float meters)
+{
+    if(!DataSent && !ManualMode)
+    {
+      FLUSHMOTORBUFFER();
+      MoveMotorForward(meters);
+      FLUSHMOTORBUFFER();
+      DataSent = true;
+      sweeping = false;
+    }
+}
+
+int maxWayPointPizza = 0;
+void PioneerWorksFromTrashCans()
+{
+  if(curWayPoint == maxWayPointPizza + 1)
+  {
+    TurnToAngleComplete(327);
+  }
+  else if(curWayPoint == maxWayPointPizza + 2)
+  {
+    AlignToWallOnLeft();
+  }
+  else if(curWayPoint == maxWayPointPizza + 3)
+  {
+    GetToWallDistanceLeft(250);
+  }
+  else if(curWayPoint == maxWayPointPizza + 4)
+  {
+    GoToPositionComplete(5); // 5m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 5)
+  {
+    GetToWallDistanceLeft(250);
+  }
+  else if(curWayPoint == maxWayPointPizza + 6)
+  {
+    GoToPositionComplete(5); // 10m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 7)
+  {
+    GetToWallDistanceLeft(250); 
+  }
+  else if(curWayPoint == maxWayPointPizza + 8)
+  {
+    GoToPositionComplete(5); //15m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 9)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 10)
+  {
+    GoToPositionComplete(5); // 20m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 11)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 12)
+  {
+    GoToPositionComplete(5); // 25 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 13)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 14)
+  {
+    GoToPositionComplete(5); // 30 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 15)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 16)
+  {
+    GoToPositionComplete(5); // 35 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 17)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 18)
+  {
+    GoToPositionComplete(5); // 40 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 19)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 20)
+  {
+    GoToPositionComplete(5); // 45 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 21)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 22)
+  {
+    GoToPositionComplete(5); // 50 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 23)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 24)
+  {
+    GoToPositionComplete(5); // 55 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 25)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 26)
+  {
+    GoToPositionComplete(5); // 60 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 27)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 28)
+  {
+    GoToPositionComplete(5); // 65 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 29)
+  {
+    TurnToAngleComplete(curSystemAngle - 90); // Turn toward pioneer works
+  }
+  else if(curWayPoint == maxWayPointPizza + 30)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == maxWayPointPizza + 31)
+  {
+    GoToPositionComplete(4); // Drive into pioneer works
+  }
+}
+
+void PioneerWorksFromPizzaShop()
+{
+  if(curWayPoint == maxWayPointPizza + 1)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == maxWayPointPizza + 2)
+  {
+    TurnToAngleComplete(curSystemAngle + 90);
+  }
+  else if(curWayPoint == maxWayPointPizza + 3)
+  {
+    GoToPositionComplete(5); // 5m
+  }
+  else if(curWayPoint == maxWayPointPizza + 4)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 5)
+  {
+    GoToPositionComplete(5); // 10m
+  }
+  else if(curWayPoint == maxWayPointPizza + 6)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 7)
+  {
+    GoToPositionComplete(4); // 14m
+  }
+  else if(curWayPoint == maxWayPointPizza + 8)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 9)
+  {
+    IsButtonPressed();
+  }
+
+
+  else if(curWayPoint == maxWayPointPizza + 10)
+  {
+    DriveToCornerLeft(5); // Find Corner
+  }
+  else if(curWayPoint == maxWayPointPizza + 11)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == maxWayPointPizza + 12)
+  {
+    GoToPositionComplete(2);
+  }
+  else if(curWayPoint == maxWayPointPizza + 13)
+  {
+    TurnToAngleComplete(curSystemAngle - 90);
+  }
+  else if(curWayPoint == maxWayPointPizza + 14)
+  {
+    GoToPositionComplete(2); // 2m into journey
+  }
+  else if(curWayPoint == maxWayPointPizza + 15)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 16) 
+  {
+    GoToPositionComplete(5); // 7m into Journey
+  }
+  else if(curWayPoint == maxWayPointPizza + 17)
+  {
+    GetToWallDistanceLeft(250);
+  }
+  else if(curWayPoint == maxWayPointPizza + 18)
+  {
+    DriveToCornerLeft(5); // Find Trash Cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 19)
+  {
+    GoToPositionComplete(1); // 1m into trashcan
+  }
+  else if(curWayPoint == maxWayPointPizza + 20)
+  {
+    GetToWallDistanceLeft(125);
+  }
+  else if(curWayPoint == maxWayPointPizza + 21)
+  {
+    GoToPositionComplete(3); // 4m into trashcan
+  }
+  else if(curWayPoint == maxWayPointPizza + 22)
+  {
+    GetToWallDistanceLeft(125);
+  }
+  else if(curWayPoint == maxWayPointPizza + 23)
+  {
+    DriveToCornerLeft(5); // Find end of trashcans.... 67.55 to go
+  }
+  else if(curWayPoint == maxWayPointPizza + 24)
+  {
+    GoToPositionComplete(5); // 5m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 25)
+  {
+    GetToWallDistanceLeft(250);
+  }
+  else if(curWayPoint == maxWayPointPizza + 26)
+  {
+    GoToPositionComplete(5); // 10m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 27)
+  {
+    GetToWallDistanceLeft(250); 
+  }
+  else if(curWayPoint == maxWayPointPizza + 28)
+  {
+    GoToPositionComplete(5); //15m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 29)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 30)
+  {
+    GoToPositionComplete(5); // 20m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 31)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 32)
+  {
+    GoToPositionComplete(5); // 25 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 33)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 34)
+  {
+    GoToPositionComplete(5); // 30 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 35)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 36)
+  {
+    GoToPositionComplete(5); // 35 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 37)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 38)
+  {
+    GoToPositionComplete(5); // 40 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 39)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 40)
+  {
+    GoToPositionComplete(5); // 45 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 41)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 42)
+  {
+    GoToPositionComplete(5); // 50 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 43)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 44)
+  {
+    GoToPositionComplete(5); // 55 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 45)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 46)
+  {
+    GoToPositionComplete(5); // 60 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 47)
+  {
+    GetToWallDistanceLeft(200);
+  }
+  else if(curWayPoint == maxWayPointPizza + 48)
+  {
+    GoToPositionComplete(5); // 65 m past trash cans
+  }
+  else if(curWayPoint == maxWayPointPizza + 49)
+  {
+    TurnToAngleComplete(curSystemAngle - 90); // Turn toward pioneer works
+  }
+  else if(curWayPoint == maxWayPointPizza + 50)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == maxWayPointPizza + 51)
+  {
+    GoToPositionComplete(4); // Drive into pioneer works
+  }
+}
+
+void PizzaFromTrashCans()
+{
+  maxWayPointPizza = 19;
+
+  if(curWayPoint == 1)
+  {
+    TurnToAngleComplete(60);
+  }
+  else if(curWayPoint == 2)
+  {
+    AlignToWallOnRight();
+  }
+  else if(curWayPoint == 3)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 4)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 5)
+  {
+    DriveToCornerRight(10); // Find corner of Pioneer and Van Brunt
+  }
+  else if(curWayPoint == 6)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 7)
+  {
+    GoToPositionComplete(1.7); // Move into sideway
+  }
+  else if(curWayPoint == 8)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 9)
+  {
+    TurnToAngleComplete(curSystemAngle+90); // Rotate Toward Marks
+  }
+  else if(curWayPoint == 10)
+  {
+    GoToPositionComplete(2); // Go 2m toward the deli
+  }
+  else if(curWayPoint == 11)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 12)
+  {
+    GoToPositionComplete(3); // 5m from corner
+  }
+  else if(curWayPoint == 13)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 14)
+  {
+    GoToPositionComplete(3); // 8m from corner
+  }
+  else if(curWayPoint == 15)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 16)
+  {
+    GoToPositionComplete(5); //13m from corner
+  }
+  else if(curWayPoint == 17)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 18)
+  {
+    GoToPositionComplete(3.6); // 16.6m from corner .....   AT MARKS
+  }
+  else if(curWayPoint == 19)
+  {
+    TurnToAngleComplete(curSystemAngle+90); // Look into marks pizza
+  }
+
+}
+
+void GoToPizzaShop()
+{
+  maxWayPointPizza = 47;
+
+  if(curWayPoint == 1) // Wait for Button Press
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 2) // Turn toward Pioneer Works door
+  {
+    TurnToAngleComplete(60);
+  }
+  else if(curWayPoint == 3) // Leave through pioneer works garage - 4m
+  {
+    GoToPositionComplete(4);
+  }
+  else if(curWayPoint == 4) // Turn to look up Pioneer St
+  {
+    TurnToAngleComplete(curSystemAngle + 90);
+  }
+  else if(curWayPoint == 5) // Clear the garage door
+  {
+    GoToPositionComplete(3); // 3m into journey
+  }
+  else if(curWayPoint == 6) // Wait for button press after garage door lowered
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 7) // Align to the wall on right
+  {
+    AlignToWallOnRight();
+  }
+  else if(curWayPoint == 8) // Get distance to wall
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 9) // start to move
+  {
+    GoToPositionComplete(10); // 13m into journey
+  }
+  else if(curWayPoint == 10)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 11)
+  {
+    GoToPositionComplete(10); // 23m into journey
+  }
+  else if(curWayPoint == 12)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 13)
+  {
+    GoToPositionComplete(10); // 33m
+  }
+  else if(curWayPoint == 14)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 15)
+  {
+    GoToPositionComplete(10); // 43m
+  }
+  else if(curWayPoint == 16)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 17)
+  {
+    GoToPositionComplete(10); // 53m
+  }
+  else if(curWayPoint == 18)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 19) // MOVE DIFFERENTLY BECAUSE OF LUMP
+  {
+    GoToPositionComplete(5); // 58m
+  }
+  else if(curWayPoint == 20)
+  {
+    GetToWallDistanceRight(250);
+    //TurnToAngleComplete(155);
+  }
+  else if(curWayPoint == 21)
+  {
+    GoToPositionComplete(6); // 64m
+    //AlignToWallOnRight();
+  }
+  else if(curWayPoint == 22)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 23)
+  {
+    DriveToCornerRight(10); // This will end once hitting the wood stuff.. 15.5m from corner to Marks
+  }
+  else if(curWayPoint == 24)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 25)
+  {
+    GoToPositionComplete(1); // 1m into trash cans
+  }
+  else if(curWayPoint == 26)
+  {
+    GetToWallDistanceRight(125);
+  }
+  else if(curWayPoint == 27)
+  {
+    GoToPositionComplete(3);
+  }
+  else if(curWayPoint == 28)
+  {
+    GetToWallDistanceRight(125);
+  }
+
+
+  else if(curWayPoint == 29)
+  {
+    DriveToCornerRight(5); // Find end of trash cans
+  }
+  else if(curWayPoint == 30)
+  {
+    GoToPositionComplete(1);
+  }
+  else if(curWayPoint == 31)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 32)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 33)
+  {
+    DriveToCornerRight(10); // Find corner of Pioneer and Van Brunt
+  }
+  else if(curWayPoint == 34)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 35)
+  {
+    GoToPositionComplete(1.7); // Move into sideway
+  }
+  else if(curWayPoint == 36)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 37)
+  {
+    TurnToAngleComplete(curSystemAngle+90); // Rotate Toward Marks
+  }
+  else if(curWayPoint == 38)
+  {
+    GoToPositionComplete(2); // Go 2m toward the deli
+  }
+  else if(curWayPoint == 39)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 40)
+  {
+    GoToPositionComplete(3); // 5m from corner
+  }
+  else if(curWayPoint == 41)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 42)
+  {
+    GoToPositionComplete(3); // 8m from corner
+  }
+  else if(curWayPoint == 43)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 44)
+  {
+    GoToPositionComplete(5); //13m from corner
+  }
+  else if(curWayPoint == 45)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 46)
+  {
+    GoToPositionComplete(3.6); // 16.6m from corner .....   AT MARKS
+  }
+  else if(curWayPoint == 47)
+  {
+    TurnToAngleComplete(curSystemAngle+90); // Look into marks pizza
+  }
+  
+}
+
+void TestWallMotion()
+{
+  if(curWayPoint == 1)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 2)
+  {
+    TurnToAngleComplete(238);
+  }
+  else if(curWayPoint == 3)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 4)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 5)
+  {
+    TurnToAngleComplete(curSystemAngle - 180);
+  }
+  else if(curWayPoint == 6)
+  {
+    GetToWallDistanceLeft(500);
+  }
+  else if(curWayPoint == 7)
+  {
+    GetToWallDistanceLeft(300);
+  }
+  else if(curWayPoint == 8)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 9)
+  {
+    TurnToAngleComplete(curSystemAngle + 180);
+  }
+  else if(curWayPoint == 10)
+  {
+    GetToWallDistanceRight(600);
+  }
+}
+
+void NavigatePioneer()
+{
+  if(curWayPoint == 1)
+  {
+    IsButtonPressed();
+  }
+  else if(curWayPoint == 2)
+  {
+    TurnToAngleComplete(60);
+  }
+  else if(curWayPoint == 3)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 4)
+  {
+    AlignToWallOnRight();
+  }
+  else if(curWayPoint == 5)
+  {
+    GoToPositionComplete(5);
+  }
+  else if(curWayPoint == 6)
+  {
+    GetToWallDistanceRight(200);
+  }
+  else if(curWayPoint == 7)
+  {
+    GoToPositionComplete(5);
+  }
+}
+
+boolean sent = true;
 
 void loop()
 {
   DoSerialCommands();
 
-  //DoWallFindingSquares();
-  DriveToCornerTest();
+  if(sent == false)
+  {
+    curWayPoint = 20;
+    sent = true;
+  }
+
+  // EXECUTE YOUR PROGRAMS INSIDE OF HERE
+  if(!ManualMode)
+  {
+    //DoWallFindingSquares();
+    //DriveToCornerTest();
+    //DoSquares();
+    //TestWallMotion();
+    //NavigatePioneer();
+    GoToPizzaShop();
+    PioneerWorksFromPizzaShop();
+  }
+
+  
+  
   // if(curWayPoint == 0)
   // {
   //   DoCorrectionAngle(160, 200, true);
   // }
+
+  
 
   // if(curWayPoint == 1)
   // {
@@ -1223,12 +2207,12 @@ void loop()
   //   Serial.println("SWEEP ERROR");
   // }
 
-  if(!sweeping)
+  if(!sweeping && !waitingForButton && curWayPoint > 0)
   {
     StepAndRead();
   }
 
-  if(CheckForMotionComplete() && !sweeping && !waitingForButton)
+  if(CheckForMotionComplete() && !sweeping && !waitingForButton && !DoingAlgorithm)
   {
     // Move on to next motion
     OnCompleteWayPoint();
