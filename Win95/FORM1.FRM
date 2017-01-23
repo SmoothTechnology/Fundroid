@@ -211,9 +211,13 @@ Private Sub MSComm1_OnComm()
         read = .Input
         buffer.Caption = buffer.Caption & read
         ending = InStr(1, buffer.Caption, Chr(10))
+        If ending > 10 Then
+          buffer.Caption = ""
+          ending = 0
+        End If
         If ending > 0 Then
           first = InStr(1, buffer.Caption, ",")
-          If first > 0 Then
+          If first > 0 And first < Len(buffer.Caption) Then
               X = Val(Mid(buffer.Caption, 1, first - 1))
               Y = Val(Mid(buffer.Caption, first + 1, ending - 1))
               CursorX.Caption = X
