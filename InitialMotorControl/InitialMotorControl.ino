@@ -312,7 +312,7 @@ int CheckForCommands()
 
 boolean IsInitializeAngleClose()
 {
-  if(curBNOHeading > 357.0 || curBNOHeading < 3.0)
+  if(curBNOHeading > 359.0 || curBNOHeading < 1.0)
     return true;
 
   return false;
